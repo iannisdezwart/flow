@@ -559,10 +559,19 @@ namespace flow {
 
 				DynamicArray<size_t> found_positions = find_indices_of(search_string);
 
-				// Reserve enough size and increment the size manually
+				if (char_count - 1 == search_string.size()) {
+					// The string sizes match, no shifting is necessary
+					// Replace each match, left to right
 
-				if (char_count - 1 >= search_string.size()) {
-					// The String will grow or stay the same
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+
+						for (size_t j = 0; j < char_count - 1; j++) {
+							set_at_index(pos + j, chars[j]);
+						}
+					}
+				} else if (char_count - 1 > search_string.size()) {
+					// The String will grow
 					// Reserve enough space and increment the size manually
 
 					size_t size_diff = char_count - 1 - search_string.size();
