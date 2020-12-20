@@ -565,20 +565,19 @@ namespace flow {
 					// The String will grow or stay the same
 					// Reserve enough space and increment the size manually
 
-					size_t extra_chars = found_positions.size() * (
-						char_count - 1 - search_string.size()
-					);
+					size_t size_diff = char_count - 1 - search_string.size();
+					size_t extra_chars = found_positions.size() * size_diff;
 
 					size_t prev_pos = size();
 
 					reserve(extra_chars);
 					unsafe_increment_element_count(extra_chars);
 
-					// Replace each match
+					// Replace each match, right to left
 
 					for (size_t i = found_positions.size(); i > 0; i--) {
 						size_t pos = found_positions[i - 1];
-						size_t offset = i * (char_count - 1 - search_string.size());
+						size_t offset = i * size_diff;
 
 						// Index to shift from
 
@@ -595,14 +594,8 @@ namespace flow {
 						// Put the new character sequence in the created gap
 
 						for (size_t j = 0; j < char_count - 1; j++) {
-							size_t index = pos + (i - 1) * (
-								char_count - 1 - search_string.size()
-							) + j;
-							printf("moving %ld (%c) into %ld\n", j, chars[j], index);
-							printf("old char was %c\n", get_at_index(index));
-
+							size_t index = pos + (i - 1) * size_diff + j;
 							set_at_index(index, chars[j]);
-							printf("new char is %c\n", get_at_index(index));
 						}
 
 						prev_pos = pos;
