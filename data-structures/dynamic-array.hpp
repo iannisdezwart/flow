@@ -300,7 +300,7 @@ namespace flow {
 			 *  @param  offset  The offset after the current last element to place
 			 *  the new value.
 			 */
-			void unsafe_append(type value, size_t offset)
+			void unsafe_append(type value, size_t offset = 0)
 			{
 				buffer[current_element_count + offset] = value;
 			}
