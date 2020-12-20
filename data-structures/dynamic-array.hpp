@@ -459,7 +459,7 @@ namespace flow {
 				size_t length = SIZE_MAX
 			)
 			{
-				size_t i = starting_index;
+				size_t i = starting_index - offset;
 				size_t upper_bound = min(size() - offset, starting_index + length);
 
 				while (i < upper_bound) {
