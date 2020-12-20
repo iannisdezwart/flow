@@ -587,7 +587,7 @@ namespace flow {
 
 						size_t shift_length = prev_pos - starting_index;
 
-						// Shift the part of the String
+						// Shift the inter part of the String to the right
 
 						shift_right(offset, starting_index, shift_length);
 
@@ -603,7 +603,43 @@ namespace flow {
 				} else {
 					// The String will shrink
 
-					throw "NOT IMPLEMENTED";
+					size_t size_diff = search_string.size() - (char_count - 1);
+					size_t redundant_chars = found_positions.size() * size_diff;
+
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+						size_t next_pos = (i == found_positions.size() - 1)
+							? size() - 1
+							: found_positions[i + 1];
+
+						// Put the new character sequence straight in place
+
+						for (size_t j = 0; j < char_count - 1; j++) {
+							size_t index = pos - i * size_diff + j;
+							set_at_index(index, chars[j]);
+						}
+
+						size_t offset = (i + 1) * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + search_string.size();
+
+						// Length of the left shift
+
+						size_t shift_length = next_pos - starting_index;
+
+						// Shift the inter part of the String to the left
+
+						shift_left(offset, starting_index, shift_length);
+					}
+
+					// Shorten the String
+
+					unreserve(redundant_chars);
+					unsafe_decrement_element_count(redundant_chars);
 				}
 			}
 
