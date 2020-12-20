@@ -419,8 +419,8 @@ namespace flow {
 			 *  Use DynamicArray::rotate() to circularly rotate the elements.
 			 *  @param  offset  How many positions to shift the message to the right.
 			 *  @param  starting_index  The first index to shift, counted from the left.
-			 *  The items to the left of this index will stay unchanged. Defaults to 0.
-			 *  @param  length  The amount of values to shift. Defaults to SIZE_MAX.
+			 *  The items to the left of this index will not be shifted. Defaults to 0.
+			 *  @param  length  The max amount of values to shift. Defaults to SIZE_MAX.
 			 *  @note  Runtime: O(l), l = size() or length
 			 *  @note  Memory: O(1)
 			 */
