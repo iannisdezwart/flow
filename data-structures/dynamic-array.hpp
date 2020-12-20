@@ -214,7 +214,7 @@ namespace flow {
 			/**
 			 *  @brief  Reserves space for some elements.
 			 *  The DynamicArray will automatically grow to a power of 2 if needed.
-			 * 	@param  size  The number of elements to reserve space for
+			 * 	@param  size  The number of elements to reserve space for.
 			 *  @note  Runtime: O(1) if no resize is needed, O(n) otherwise, n = size()
 			 *  @note  Memory: O(1)
 			 */
@@ -234,6 +234,19 @@ namespace flow {
 
 					resize_buffer(new_buffer_size);
 				}
+			}
+
+			/**
+			 *  @brief  Unreserves space for some elements.
+			 *  The DynamicArray will automatically shrink by a factor of 2 if possible,
+			 *  @param  size  The number of elements to unreserve spacce for.
+			 *  @note  Runtime: O(1) if no resize is possible, O(n) otherwise, n = size()
+			 *  @note  Memory: O(1)
+			 */
+			void unreserve(size_t size)
+			{
+				size_t new_size = current_element_count - size;
+				if (new_size * 2 <= current_buffer_size) shrink();
 			}
 
 			/**
@@ -264,6 +277,17 @@ namespace flow {
 			void unsafe_increment_element_count(size_t number_of_elements)
 			{
 				current_element_count += number_of_elements;
+			}
+
+			/**
+			 *  @brief  Directly decrements the private property current_element_count
+			 *  by a certain amount. ONLY USE this if you know what you are doing!!!
+			 *  @param  number_of_elements  By how much you want to decrement
+			 *  current_element_count.
+			 */
+			void unsafe_decrement_element_count(size_t number_of_elements)
+			{
+				current_element_count -= number_of_elements;
 			}
 
 			/**
