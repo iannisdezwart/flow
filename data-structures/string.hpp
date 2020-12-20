@@ -30,6 +30,20 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Appends a NULL byte to the String and returns a pointer to
+			 *  the first character of the internal buffer of this String,
+			 *  effectively resolving into a constant character array.
+			 *  @note  Runtime: O(1) if no resize is needed, otherwise O(n), n = size()
+			 *  @note  Memory: O(1)
+			 */
+			const char *to_char_arr()
+			{
+				append('\0');
+				unsafe_decrement_element_count(1);
+				return begin();
+			}
+
+			/**
 			 *  @brief  Attaches a sequence of characters to the end of this String.
 			 *  The String will automatically grow to a power of 2 if needed.
 			 *  @param  chars  The sequence of characters to attach to this String.
