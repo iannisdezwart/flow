@@ -558,37 +558,40 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Replaces all matches of a given search_string with another
-			 *  character sequence
-			 *  @param  search_string  The String to search and replace.
-			 *  @param  chars  The character sequence to replace it with.
-			 *  @note  Runtime: O(n + m * o), n = size(), m = search_string.size(),
+			 *  @brief  Replaces all matches of a given character sequence with
+			 *  another character sequence
+			 *  @param  search_chars  The character sequence to search and replace.
+			 *  @param  replacement_chars  The character sequence to replace it with.
+			 *  @note  Runtime: O(n + m * o), n = size(), m = search_chars length,
 			 *  o = found matches
 			 *  @note  Memory: O(o)
 			 */
-			template <size_t char_count>
-			void replace(String& search_string, const char (&chars)[char_count])
+			template <size_t search_chars_count, size_t replacement_chars_count>
+			void replace(
+				const char (&search_chars)[search_chars_count],
+				const char (&replacement_chars)[replacement_chars_count]
+			)
 			{
 				// Get the indices of the found matches
 
-				DynamicArray<size_t> found_positions = find_indices_of(search_string);
+				DynamicArray<size_t> found_positions = find_indices_of(search_chars);
 
-				if (char_count - 1 == search_string.size()) {
-					// The string sizes match, no shifting is necessary
+				if (replacement_chars_count == search_chars_count) {
+					// The character counts match, no shifting is necessary
 					// Replace each match, left to right
 
 					for (size_t i = 0; i < found_positions.size(); i++) {
 						size_t pos = found_positions[i];
 
-						for (size_t j = 0; j < char_count - 1; j++) {
-							set_at_index(pos + j, chars[j]);
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
+							set_at_index(pos + j, replacement_chars[j]);
 						}
 					}
-				} else if (char_count - 1 > search_string.size()) {
+				} else if (replacement_chars_count > search_chars_count) {
 					// The String will grow
 					// Reserve enough space and increment the size manually
 
-					size_t size_diff = char_count - 1 - search_string.size();
+					size_t size_diff = replacement_chars_count - search_chars_count;
 					size_t extra_chars = found_positions.size() * size_diff;
 
 					size_t prev_pos = size();
@@ -616,9 +619,9 @@ namespace flow {
 
 						// Put the new character sequence in the created gap
 
-						for (size_t j = 0; j < char_count - 1; j++) {
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
 							size_t index = pos + (i - 1) * size_diff + j;
-							set_at_index(index, chars[j]);
+							set_at_index(index, replacement_chars[j]);
 						}
 
 						prev_pos = pos;
@@ -626,7 +629,7 @@ namespace flow {
 				} else {
 					// The String will shrink
 
-					size_t size_diff = search_string.size() - (char_count - 1);
+					size_t size_diff = search_chars_count - replacement_chars_count;
 					size_t redundant_chars = found_positions.size() * size_diff;
 
 					// Replace each match, left to right
@@ -639,9 +642,344 @@ namespace flow {
 
 						// Put the new character sequence straight in place
 
-						for (size_t j = 0; j < char_count - 1; j++) {
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
 							size_t index = pos - i * size_diff + j;
-							set_at_index(index, chars[j]);
+							set_at_index(index, replacement_chars[j]);
+						}
+
+						size_t offset = (i + 1) * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + search_chars_count - 1;
+
+						// Length of the left shift
+
+						size_t shift_length = next_pos - starting_index;
+
+						// Shift the inter part of the String to the left
+
+						shift_left(offset, starting_index, shift_length);
+					}
+
+					// Shorten the String
+
+					unreserve(redundant_chars);
+					unsafe_decrement_element_count(redundant_chars);
+				}
+			}
+
+			/**
+			 *  @brief  Replaces all matches of a given search_string with another
+			 *  character sequence
+			 *  @param  search_string  The String to search and replace.
+			 *  @param  replacement_chars  The character sequence to replace it with.
+			 *  @note  Runtime: O(n + m * o), n = size(), m = search_string.size(),
+			 *  o = found matches
+			 *  @note  Memory: O(o)
+			 */
+			template <size_t replacement_chars_count>
+			void replace(
+				String& search_string,
+				const char (&replacement_chars)[replacement_chars_count]
+			)
+			{
+				// Get the indices of the found matches
+
+				DynamicArray<size_t> found_positions = find_indices_of(search_string);
+
+				if (replacement_chars_count - 1 == search_string.size()) {
+					// The string sizes match, no shifting is necessary
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
+							set_at_index(pos + j, replacement_chars[j]);
+						}
+					}
+				} else if (replacement_chars_count - 1 > search_string.size()) {
+					// The String will grow
+					// Reserve enough space and increment the size manually
+
+					size_t size_diff = replacement_chars_count - 1 - search_string.size();
+					size_t extra_chars = found_positions.size() * size_diff;
+
+					size_t prev_pos = size();
+
+					reserve(extra_chars);
+					unsafe_increment_element_count(extra_chars);
+
+					// Replace each match, right to left
+
+					for (size_t i = found_positions.size(); i > 0; i--) {
+						size_t pos = found_positions[i - 1];
+						size_t offset = i * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + extra_chars - 1;
+
+						// Length of the right shift
+
+						size_t shift_length = prev_pos - starting_index;
+
+						// Shift the inter part of the String to the right
+
+						shift_right(offset, starting_index, shift_length);
+
+						// Put the new character sequence in the created gap
+
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
+							size_t index = pos + (i - 1) * size_diff + j;
+							set_at_index(index, replacement_chars[j]);
+						}
+
+						prev_pos = pos;
+					}
+				} else {
+					// The String will shrink
+
+					size_t size_diff = search_string.size() - (replacement_chars_count - 1);
+					size_t redundant_chars = found_positions.size() * size_diff;
+
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+						size_t next_pos = (i == found_positions.size() - 1)
+							? size() - 1
+							: found_positions[i + 1];
+
+						// Put the new character sequence straight in place
+
+						for (size_t j = 0; j < replacement_chars_count - 1; j++) {
+							size_t index = pos - i * size_diff + j;
+							set_at_index(index, replacement_chars[j]);
+						}
+
+						size_t offset = (i + 1) * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + search_string.size();
+
+						// Length of the left shift
+
+						size_t shift_length = next_pos - starting_index;
+
+						// Shift the inter part of the String to the left
+
+						shift_left(offset, starting_index, shift_length);
+					}
+
+					// Shorten the String
+
+					unreserve(redundant_chars);
+					unsafe_decrement_element_count(redundant_chars);
+				}
+			}
+
+			/**
+			 *  @brief  Replaces all matches of a given character sequence with
+			 *  another replacement_string
+			 *  @param  search_chars  The character sequence to search and replace.
+			 *  @param  replacement_string  The String to replace it with.
+			 *  @note  Runtime: O(n + m * o), n = size(), m = search_chars length,
+			 *  o = found matches
+			 *  @note  Memory: O(o)
+			 */
+			template <size_t search_chars_count>
+			void replace(
+				const char (&search_chars)[search_chars_count],
+				String& replacement_string
+			)
+			{
+				// Get the indices of the found matches
+
+				DynamicArray<size_t> found_positions = find_indices_of(search_chars);
+
+				if (replacement_string.size() == search_chars_count - 1) {
+					// The character counts match, no shifting is necessary
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							set_at_index(pos + j, replacement_string[j]);
+						}
+					}
+				} else if (replacement_string.size() > search_chars_count - 1) {
+					// The String will grow
+					// Reserve enough space and increment the size manually
+
+					size_t size_diff = replacement_string.size() - (search_chars_count - 1);
+					size_t extra_chars = found_positions.size() * size_diff;
+
+					size_t prev_pos = size();
+
+					reserve(extra_chars);
+					unsafe_increment_element_count(extra_chars);
+
+					// Replace each match, right to left
+
+					for (size_t i = found_positions.size(); i > 0; i--) {
+						size_t pos = found_positions[i - 1];
+						size_t offset = i * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + extra_chars - 1;
+
+						// Length of the right shift
+
+						size_t shift_length = prev_pos - starting_index;
+
+						// Shift the inter part of the String to the right
+
+						shift_right(offset, starting_index, shift_length);
+
+						// Put the new character sequence in the created gap
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							size_t index = pos + (i - 1) * size_diff + j;
+							set_at_index(index, replacement_string[j]);
+						}
+
+						prev_pos = pos;
+					}
+				} else {
+					// The String will shrink
+
+					size_t size_diff = (search_chars_count - 1) - replacement_string.size();
+					size_t redundant_chars = found_positions.size() * size_diff;
+
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+						size_t next_pos = (i == found_positions.size() - 1)
+							? size() - 1
+							: found_positions[i + 1];
+
+						// Put the new character sequence straight in place
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							size_t index = pos - i * size_diff + j;
+							set_at_index(index, replacement_string[j]);
+						}
+
+						size_t offset = (i + 1) * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + search_chars_count - 1;
+
+						// Length of the left shift
+
+						size_t shift_length = next_pos - starting_index;
+
+						// Shift the inter part of the String to the left
+
+						shift_left(offset, starting_index, shift_length);
+					}
+
+					// Shorten the String
+
+					unreserve(redundant_chars);
+					unsafe_decrement_element_count(redundant_chars);
+				}
+			}
+
+			/**
+			 *  @brief  Replaces all matches of a given search_string with another
+			 *  replacement_string
+			 *  @param  search_string  The String to search and replace.
+			 *  @param  replacement_string  The String to replace it with.
+			 *  @note  Runtime: O(n + m * o), n = size(), m = search_string.size(),
+			 *  o = found matches
+			 *  @note  Memory: O(o)
+			 */
+			void replace(
+				String& search_string,
+				String& replacement_string
+			)
+			{
+				// Get the indices of the found matches
+
+				DynamicArray<size_t> found_positions = find_indices_of(search_string);
+
+				if (replacement_string.size() == search_string.size()) {
+					// The string sizes match, no shifting is necessary
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							set_at_index(pos + j, replacement_string[j]);
+						}
+					}
+				} else if (replacement_string.size() > search_string.size()) {
+					// The String will grow
+					// Reserve enough space and increment the size manually
+
+					size_t size_diff = replacement_string.size() - search_string.size();
+					size_t extra_chars = found_positions.size() * size_diff;
+
+					size_t prev_pos = size();
+
+					reserve(extra_chars);
+					unsafe_increment_element_count(extra_chars);
+
+					// Replace each match, right to left
+
+					for (size_t i = found_positions.size(); i > 0; i--) {
+						size_t pos = found_positions[i - 1];
+						size_t offset = i * size_diff;
+
+						// Index to shift from
+
+						size_t starting_index = pos + extra_chars - 1;
+
+						// Length of the right shift
+
+						size_t shift_length = prev_pos - starting_index;
+
+						// Shift the inter part of the String to the right
+
+						shift_right(offset, starting_index, shift_length);
+
+						// Put the new character sequence in the created gap
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							size_t index = pos + (i - 1) * size_diff + j;
+							set_at_index(index, replacement_string[j]);
+						}
+
+						prev_pos = pos;
+					}
+				} else {
+					// The String will shrink
+
+					size_t size_diff = search_string.size() - replacement_string.size();
+					size_t redundant_chars = found_positions.size() * size_diff;
+
+					// Replace each match, left to right
+
+					for (size_t i = 0; i < found_positions.size(); i++) {
+						size_t pos = found_positions[i];
+						size_t next_pos = (i == found_positions.size() - 1)
+							? size() - 1
+							: found_positions[i + 1];
+
+						// Put the new character sequence straight in place
+
+						for (size_t j = 0; j < replacement_string.size(); j++) {
+							size_t index = pos - i * size_diff + j;
+							set_at_index(index, replacement_string[j]);
 						}
 
 						size_t offset = (i + 1) * size_diff;
