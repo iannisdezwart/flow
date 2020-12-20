@@ -569,20 +569,28 @@ namespace flow {
 						char_count - 1 - search_string.size()
 					);
 
+					size_t prev_pos = size();
+
 					reserve(extra_chars);
 					unsafe_increment_element_count(extra_chars);
 
 					// Replace each match
 
-					size_t prev_pos = size();
-
 					for (size_t i = found_positions.size(); i > 0; i--) {
 						size_t pos = found_positions[i - 1];
 						size_t offset = i * (char_count - 1 - search_string.size());
 
+						// Index to shift from
+
+						size_t starting_index = pos + extra_chars - 1;
+
+						// Length of the right shift
+
+						size_t shift_length = prev_pos - starting_index;
+
 						// Shift the part of the String
-						// Todo: fix length
-						shift_right(offset, pos + 1, prev_pos - pos + 1);
+
+						shift_right(offset, starting_index, shift_length);
 
 						// Put the new character sequence in the created gap
 
