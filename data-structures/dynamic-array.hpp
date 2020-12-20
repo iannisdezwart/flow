@@ -447,14 +447,22 @@ namespace flow {
 			 *  WARNING: elements will fall off if there is no space.
 			 *  Use DynamicArray::rotate() to circularly rotate the elements.
 			 *  @param  offset  How many positions to shift the message to the left.
+			 *  @param  starting_index  The first index to shift, counted from the left.
+			 *  The items to the left of this index will not be shifted. Defaults to 0.
+			 *  @param  length  The max amount of values to shift. Defaults to SIZE_MAX.
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(1)
 			 */
-			void shift_left(size_t offset)
+			void shift_left(
+				size_t offset,
+				size_t starting_index = 0,
+				size_t length = SIZE_MAX
+			)
 			{
-				size_t i = 0;
+				size_t i = starting_index;
+				size_t upper_bound = min(size() - offset, starting_index + length);
 
-				while (i < size() - offset) {
+				while (i < upper_bound) {
 					buffer[i] = buffer[i + offset];
 					i++;
 				}
