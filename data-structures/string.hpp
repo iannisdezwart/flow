@@ -14,7 +14,7 @@ namespace flow {
 	class String : public DynamicArray<char> {
 		public:
 			/**
-			 *  @brief  Creates a String from a sequence of characters.
+			 *  @brief  Creates a String with a given initial size.
 			 */
 			String(size_t size = 16) : DynamicArray<char>(size) {}
 
@@ -24,15 +24,17 @@ namespace flow {
 			template <size_t char_count>
 			String(const char (&chars)[char_count]) : DynamicArray<char>(char_count - 1)
 			{
+				unsafe_increment_element_count(char_count - 1);
+
 				for (size_t i = 0; i < char_count - 1; i++) {
-					append(chars[i]);
+					set_at_index(i, chars[i]);
 				}
 			}
 
 			/**
-			 *  @brief  Appends a NULL byte to the String and returns a pointer to
-			 *  the first character of the internal buffer of this String,
-			 *  effectively resolving into a constant character array.
+			 *  @brief  Ensures there is a NULL byte after the String and returns a
+			 *  pointer to the first character of the internal buffer of this String,
+			 *  effectively resolving a constant character array.
 			 *  @note  Runtime: O(1) if no resize is needed, otherwise O(n), n = size()
 			 *  @note  Memory: O(1)
 			 */
@@ -1004,7 +1006,51 @@ namespace flow {
 				}
 			}
 
-			// Todo: replace, substring, split, to_uppercase, to_lowercase
+			/**
+			 *  @brief  Returns a new String formed by a contiguous part of this
+			 *  String starting at some offset with a certain length.
+			 *  @param  offset  The index of the first character to include in the
+			 *  returned String.
+			 *  @param  length  The length of the substring.
+			 */
+			String substring(size_t offset, size_t length = SIZE_MAX)
+			{
+				length = min(length, size() - offset);
+
+				String str(length);
+				str.unsafe_increment_element_count(length);
+
+				for (size_t i = 0; i < length; i++) {
+					str.set_at_index(i, get_at_index(offset + i));
+				}
+
+				return str;
+			}
+
+			/**
+			 *  @brief  Returns a new String formed by the characters between two
+			 *  given indices of this String.
+			 *  @param  left_index  The index of the first character to include in
+			 *  the returned String.
+			 *  @param  right_index  The index of the last character to include in
+			 *  the returned String (inclusive).
+			 */
+			String between(size_t left_index, size_t right_index = SIZE_MAX)
+			{
+				right_index = min(right_index, size());
+				size_t length = right_index - left_index + 1;
+
+				String str(length);
+				str.unsafe_increment_element_count(length);
+
+				for (size_t i = 0; i < length; i++) {
+					str.set_at_index(i, get_at_index(left_index + i));
+				}
+
+				return str;
+			}
+
+			// Todo: split, to_uppercase, to_lowercase
 
 			/**
 			 *  @brief  Prints this String to a stream, followed by a newline.
