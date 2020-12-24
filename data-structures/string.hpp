@@ -1177,7 +1177,29 @@ namespace flow {
 				return strings;
 			}
 
-			// Todo: split, to_uppercase, to_lowercase
+			/**
+			 *  @brief  Replaces all lowercase characters [a-z] with their
+			 *  corresponding capital representation [A-Z].
+			 */
+			void transform_to_uppercase()
+			{
+				for (size_t i = 0; i < size(); i++) {
+					char c = get_at_index(i);
+					if (c >= 'a' && c <= 'z') set_at_index(i, c - 32);
+				}
+			}
+
+			/**
+			 *  @brief  Replaces all uppercase characters [A-Z] with their
+			 *  corresponding lowercase representation [a-z].
+			 */
+			void transform_to_lowercase()
+			{
+				for (size_t i = 0; i < size(); i++) {
+					char c = get_at_index(i);
+					if (c >= 'A' && c <= 'Z') set_at_index(i, c + 32);
+				}
+			}
 
 			/**
 			 *  @brief  Prints this String to a stream, followed by a newline.
