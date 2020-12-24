@@ -102,6 +102,20 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Creates a copy of a DynamicArray.
+			 *  @param  source_arr  The DynamicArray to copy.
+			 */
+			DynamicArray(const DynamicArray<type>& source_arr)
+			{
+				current_element_count = source_arr.current_element_count;
+				current_buffer_size = source_arr.current_buffer_size;
+				buffer = allocate_buffer();
+
+				size_t copy_size = sizeof(type) * current_element_count;
+				memcpy(buffer, source_arr.buffer, copy_size);
+			}
+
+			/**
 			 *  @brief  Reassigns the array with new values.
 			 *  @param  new_values  A brace enclosed list containing the new values.
 			 */
