@@ -32,6 +32,38 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Deletes the current value of this String and copies a new
+			 *  character array to this String.
+			 *  @param  new_value  New character array to copy to this String.
+			 */
+			template <size_t char_count>
+			void operator=(const char (&chars)[char_count])
+			{
+				size_t new_size = char_count - 1;
+
+				reset(new_size); // Sets current_element_count to 0
+				unsafe_increment_element_count(new_size);
+
+				for (size_t i = 0; i < new_size; i++) {
+					set_at_index(i, chars[i]);
+				}
+			}
+
+			/**
+			 *  @brief  Deletes the current value of this String and copies another
+			 *  String to this String.
+			 *  @param  new_value  New String to copy to this String.
+			 */
+			void operator=(String& new_value)
+			{
+				size_t new_size = new_value.size();
+
+				reset(new_size); // Sets current_element_count to 0
+				unsafe_increment_element_count(new_size);
+				copy_from(new_value);
+			}
+
+			/**
 			 *  @brief  Ensures there is a NULL byte after the String and returns a
 			 *  pointer to the first character of the internal buffer of this String,
 			 *  effectively resolving a constant character array.
