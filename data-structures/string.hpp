@@ -1086,6 +1086,97 @@ namespace flow {
 				return str;
 			}
 
+			/**
+			 *  @brief  Splits up a String into a DynamicArray of Strings, seperated
+			 *  by a given delimiter character.
+			 *  @param  delimiter  The character to split on. The delimiter will be
+			 *  removed in the output.
+			 */
+			DynamicArray<String> split(char delimiter)
+			{
+				DynamicArray<size_t> found_indices = indices_of(delimiter);
+
+				size_t strings_size = found_indices.size() + 1;
+				DynamicArray<String> strings(strings_size);
+				strings.unsafe_increment_element_count(strings_size);
+
+				for (size_t i = 0; i < strings_size; i++) {
+					size_t left_index = (i == 0)
+						? 0
+						: found_indices[i - 1] + 1;
+
+					size_t right_index = (i != strings_size - 1)
+						? found_indices[i] - 1
+						: size() - 1;
+
+					String substr = between(left_index, right_index);
+					strings[i] = substr;
+				}
+
+				return strings;
+			}
+
+			/**
+			 *  @brief  Splits up a String into a DynamicArray of Strings, seperated
+			 *  by a given delimiter character sequence.
+			 *  @param  delimiter  The character sequence to split on. The delimiter
+			 *  will be removed in the output.
+			 */
+			template <size_t char_count>
+			DynamicArray<String> split(const char (&delimiter)[char_count])
+			{
+				DynamicArray<size_t> found_indices = indices_of(delimiter);
+
+				size_t strings_size = found_indices.size() + 1;
+				DynamicArray<String> strings(strings_size);
+				strings.unsafe_increment_element_count(strings_size);
+
+				for (size_t i = 0; i < strings_size; i++) {
+					size_t left_index = (i == 0)
+						? 0
+						: found_indices[i - 1] + char_count - 1;
+
+					size_t right_index = (i != strings_size - 1)
+						? found_indices[i] - 1
+						: size() - 1;
+
+					String substr = between(left_index, right_index);
+					strings[i] = substr;
+				}
+
+				return strings;
+			}
+
+			/**
+			 *  @brief  Splits up a String into a DynamicArray of Strings, seperated
+			 *  by a given delimiter String.
+			 *  @param  delimiter  The String to split on. The delimiter will be
+			 *  removed in the output.
+			 */
+			DynamicArray<String> split(String delimiter)
+			{
+				DynamicArray<size_t> found_indices = indices_of(delimiter);
+
+				size_t strings_size = found_indices.size() + 1;
+				DynamicArray<String> strings(strings_size);
+				strings.unsafe_increment_element_count(strings_size);
+
+				for (size_t i = 0; i < strings_size; i++) {
+					size_t left_index = (i == 0)
+						? 0
+						: found_indices[i - 1] + delimiter.size();
+
+					size_t right_index = (i != strings_size - 1)
+						? found_indices[i] - 1
+						: size() - 1;
+
+					String substr = between(left_index, right_index);
+					strings[i] = substr;
+				}
+
+				return strings;
+			}
+
 			// Todo: split, to_uppercase, to_lowercase
 
 			/**
