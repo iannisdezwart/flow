@@ -58,7 +58,7 @@ namespace flow {
 						new_buffer[i] = buffer[i];
 					}
 
-					delete buffer;
+					delete[] buffer;
 				}
 
 				buffer = new_buffer;
@@ -111,11 +111,26 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Releases the internal buffer and resets the DynamicArray.
+			 *  Creates a new buffer with a given starting_size.
+			 *  @param  starting_size  The initial size of the new buffer.
+			 */
+			void reset(size_t starting_size = 16)
+			{
+				type *new_buffer = allocate_buffer();
+				if (buffer != NULL) delete[] buffer;
+
+				current_element_count = 0;
+				current_buffer_size = starting_size;
+				buffer = new_buffer;
+			}
+
+			/**
 			 *  @brief  Deletes the internal buffer.
 			 */
 			~DynamicArray()
 			{
-				if (buffer != NULL) delete buffer;
+				if (buffer != NULL) delete[] buffer;
 			}
 
 			// Abstract method implementations
