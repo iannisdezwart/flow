@@ -300,6 +300,10 @@ namespace flow {
 				return true;
 			}
 
+			// Prevent C++ inherited class Name Hiding
+
+			using DynamicArray::indices_of;
+
 			/**
 			 *  @brief  Returns the indices all occurrences of a given character sequence.
 			 *  @param  chars  The character sequence to find the indices of.
@@ -307,7 +311,7 @@ namespace flow {
 			 *  @note  Memory: O(n), n = found indices
 			 */
 			template <size_t char_count>
-			DynamicArray<size_t> find_indices_of(const char (&chars)[char_count])
+			DynamicArray<size_t> indices_of(const char (&chars)[char_count])
 			{
 				DynamicArray<size_t> indices;
 
@@ -345,7 +349,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = found indices
 			 */
-			DynamicArray<size_t> find_indices_of(String& other_string)
+			DynamicArray<size_t> indices_of(String& other_string)
 			{
 				DynamicArray<size_t> indices;
 
@@ -608,7 +612,7 @@ namespace flow {
 			{
 				// Get the indices of the found matches
 
-				DynamicArray<size_t> found_positions = find_indices_of(search_chars);
+				DynamicArray<size_t> found_positions = indices_of(search_chars);
 
 				if (replacement_chars_count == search_chars_count) {
 					// The character counts match, no shifting is necessary
@@ -720,7 +724,7 @@ namespace flow {
 			{
 				// Get the indices of the found matches
 
-				DynamicArray<size_t> found_positions = find_indices_of(search_string);
+				DynamicArray<size_t> found_positions = indices_of(search_string);
 
 				if (replacement_chars_count - 1 == search_string.size()) {
 					// The string sizes match, no shifting is necessary
@@ -832,7 +836,7 @@ namespace flow {
 			{
 				// Get the indices of the found matches
 
-				DynamicArray<size_t> found_positions = find_indices_of(search_chars);
+				DynamicArray<size_t> found_positions = indices_of(search_chars);
 
 				if (replacement_string.size() == search_chars_count - 1) {
 					// The character counts match, no shifting is necessary
@@ -943,7 +947,7 @@ namespace flow {
 			{
 				// Get the indices of the found matches
 
-				DynamicArray<size_t> found_positions = find_indices_of(search_string);
+				DynamicArray<size_t> found_positions = indices_of(search_string);
 
 				if (replacement_string.size() == search_string.size()) {
 					// The string sizes match, no shifting is necessary
