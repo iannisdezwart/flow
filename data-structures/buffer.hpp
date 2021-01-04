@@ -55,9 +55,8 @@ namespace flow {
 			 */
 			void copy_from(Buffer<type>& other_buffer)
 			{
-				for (size_t i = 0; i < size(); i++) {
-					set_at_index(i, other_buffer.get_at_index(i));
-				}
+				size_t copy_size = sizeof(type) * other_buffer.size();
+				memcpy(begin(), other_buffer.begin(), copy_size);
 			}
 
 			/**
