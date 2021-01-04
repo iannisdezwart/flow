@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 
 #include "dynamic-array.hpp"
+#include "string-tools.hpp"
 
 using namespace std;
 
@@ -1213,6 +1214,416 @@ namespace flow {
 					char c = get_at_index(i);
 					if (c >= 'A' && c <= 'Z') set_at_index(i, c + 32);
 				}
+			}
+
+			/**
+			 *  @brief  Formats a String
+			 */
+			static String format(const char* fmt, ...)
+			{
+				// Size calculation
+
+				size_t size = 0;
+				size_t i = 0;
+
+				#define SIZE_8  0
+				#define SIZE_16 1
+				#define SIZE_32 2
+				#define SIZE_64 3
+
+				uint8_t length_modifier = SIZE_32;
+				bool length_modifier_set = false;
+
+				while (fmt[i] != '\0') {
+					if (fmt[i] == '%') {
+						continue_specifier:
+						i++;
+
+						switch (fmt[i]) {
+							case 'd':
+							case 'i':
+								switch (length_modifier) {
+									case SIZE_8:
+										// Max length is 4 ("-128")
+
+										size += 4;
+										goto end_specifier;
+
+									case SIZE_16:
+										// Max length is 6 ("-32768")
+
+										size += 6;
+										goto end_specifier;
+
+									case SIZE_32:
+										// Max length is 11 ("-2147483648")
+
+										size += 11;
+										goto end_specifier;
+
+									case SIZE_64:
+										// Max length is 20 ("-9223372036854775808")
+
+										size += 20;
+										goto end_specifier;
+								}
+
+							case 'u':
+								switch (length_modifier) {
+									case SIZE_8:
+										// Max length is 3 ("256")
+
+										size += 3;
+										goto end_specifier;
+
+									case SIZE_16:
+										// Max length is 5 ("65536")
+
+										size += 5;
+										goto end_specifier;
+
+									case SIZE_32:
+										// Max length is 10 ("4294967296")
+
+										size += 10;
+										goto end_specifier;
+
+									case SIZE_64:
+										// Max length is 20 ("18446744073709551616")
+
+										size += 20;
+										goto end_specifier;
+								}
+
+							case 'o':
+								switch (length_modifier) {
+									case SIZE_8:
+										// Max length is 5 ("0o400")
+
+										size += 5;
+										goto end_specifier;
+
+									case SIZE_16:
+										// Max length is 8 ("0o200000")
+
+										size += 8;
+										goto end_specifier;
+
+									case SIZE_32:
+										// Max length is 13 ("0o40000000000")
+
+										size += 13;
+										goto end_specifier;
+
+									case SIZE_64:
+										// Max length is 24 ("0o2000000000000000000000")
+
+										size += 24;
+										goto end_specifier;
+								}
+
+							case 'x':
+							case 'X':
+								switch (length_modifier) {
+									case SIZE_8:
+										// Max length is 5 ("0x100")
+
+										size += 5;
+										goto end_specifier;
+
+									case SIZE_16:
+										// Max length is 7 ("0x10000")
+
+										size += 7;
+										goto end_specifier;
+
+									case SIZE_32:
+										// Max length is 11 ("0x100000000")
+
+										size += 11;
+										goto end_specifier;
+
+									case SIZE_64:
+										// Max length is 19 ("0x10000000000000000")
+
+										size += 19;
+										goto end_specifier;
+								}
+
+							case 'h':
+								if (length_modifier_set) {
+									printf("Cannot set length modifier twice\n");
+									exit(1);
+								}
+
+								length_modifier_set = true;
+
+								if (fmt[i + 1] == 'h') {
+									i++;
+									length_modifier = SIZE_8;
+								} else {
+									length_modifier = SIZE_16;
+								}
+
+								goto continue_specifier;
+
+							case 'l':
+								if (length_modifier_set) {
+									printf("Cannot set length modifier twice\n");
+									exit(1);
+								}
+
+								length_modifier_set = true;
+
+								if (fmt[i + 1] == 'l') {
+									i++;
+									length_modifier = SIZE_64;
+								} else {
+									length_modifier = SIZE_32;
+								}
+
+								goto continue_specifier;
+						}
+					} else {
+						size++;
+					}
+
+					end_specifier:
+					length_modifier = SIZE_32;
+					length_modifier_set = false;
+					i++;
+				}
+
+				String str(size);
+
+				va_list args;
+				va_start(args, fmt);
+
+				i = 0;
+				char *buf = str.begin();
+				size_t buf_offset = 0;
+
+				while (fmt[i] != '\0') {
+					if (fmt[i] == '%') {
+						continue_specifier_1:
+						i++;
+
+						switch (fmt[i]) {
+							case 'd':
+							case 'i':
+								switch (length_modifier) {
+									case SIZE_8:
+									{
+										int8_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_int_to_str(
+											num, buf + buf_offset);
+
+										goto end_specifier_1;
+									}
+
+									case SIZE_16:
+									{
+										int16_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_int_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_32:
+									{
+										int32_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_int_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_64:
+									{
+										int64_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_int_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+								}
+
+							case 'u':
+								switch (length_modifier) {
+									case SIZE_8:
+									{
+										uint8_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_uint_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_16:
+									{
+										uint16_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_uint_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_32:
+									{
+										uint32_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_uint_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_64:
+									{
+										uint64_t num = va_arg(args, int);
+										buf_offset += flow_tools::write_uint_to_str(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+								}
+
+							case 'o':
+								switch (length_modifier) {
+									case SIZE_8:
+									{
+										uint8_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'o';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<8>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_16:
+									{
+										uint16_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'o';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<8>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_32:
+									{
+										uint32_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'o';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<8>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_64:
+									{
+										uint64_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'o';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<8>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+								}
+
+							case 'x':
+							case 'X':
+								switch (length_modifier) {
+									case SIZE_8:
+									{
+										uint8_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'x';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<16>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_16:
+									{
+										uint16_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'x';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<16>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_32:
+									{
+										uint32_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'x';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<16>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+
+									case SIZE_64:
+									{
+										uint64_t num = va_arg(args, int);
+										buf[buf_offset] = '0';
+										buf[buf_offset + 1] = 'x';
+										buf_offset += 2;
+										buf_offset += flow_tools::write_uint_to_str<16>(
+											num, buf + buf_offset);
+										goto end_specifier_1;
+									}
+								}
+
+							case 'h':
+								if (length_modifier_set) {
+									printf("Cannot set length modifier twice\n");
+									exit(1);
+								}
+
+								length_modifier_set = true;
+
+								if (fmt[i + 1] == 'h') {
+									i++;
+									length_modifier = SIZE_8;
+								} else {
+									length_modifier = SIZE_16;
+								}
+
+								goto continue_specifier_1;
+
+							case 'l':
+								if (length_modifier_set) {
+									printf("Cannot set length modifier twice\n");
+									exit(1);
+								}
+
+								length_modifier_set = true;
+
+								if (fmt[i + 1] == 'l') {
+									i++;
+									length_modifier = SIZE_64;
+								} else {
+									length_modifier = SIZE_32;
+								}
+
+								goto continue_specifier_1;
+						}
+					} else {
+						buf[buf_offset++] = fmt[i];
+					}
+
+					end_specifier_1:
+					length_modifier = SIZE_32;
+					length_modifier_set = false;
+					i++;
+				}
+
+				va_end(args);
+
+				str.unsafe_increment_element_count(buf_offset);
+				return str;
 			}
 
 			/**
