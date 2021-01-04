@@ -1048,6 +1048,8 @@ namespace flow {
 			 *  @param  offset  The index of the first character to include in the
 			 *  returned String.
 			 *  @param  length  The length of the substring.
+			 *  @note  Runtime: O(n), n = min(length, size() - offset)
+			 *  @note  Memory: O(n), n = min(length, size() - offset)
 			 */
 			String substring(size_t offset, size_t length = SIZE_MAX)
 			{
@@ -1070,6 +1072,8 @@ namespace flow {
 			 *  the returned String.
 			 *  @param  right_index  The index of the last character to include in
 			 *  the returned String (inclusive).
+			 *  @note  Runtime: O(n), n = min(right_index, size()) - left_index + 1
+			 *  @note  Memory: O(n), n = min(right_index, size()) - left_index + 1
 			 */
 			String between(size_t left_index, size_t right_index = SIZE_MAX)
 			{
@@ -1091,6 +1095,8 @@ namespace flow {
 			 *  by a given delimiter character.
 			 *  @param  delimiter  The character to split on. The delimiter will be
 			 *  removed in the output.
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(n), n = size()
 			 */
 			DynamicArray<String> split(char delimiter)
 			{
@@ -1121,6 +1127,8 @@ namespace flow {
 			 *  by a given delimiter character sequence.
 			 *  @param  delimiter  The character sequence to split on. The delimiter
 			 *  will be removed in the output.
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(n), n = size()
 			 */
 			template <size_t char_count>
 			DynamicArray<String> split(const char (&delimiter)[char_count])
@@ -1152,6 +1160,8 @@ namespace flow {
 			 *  by a given delimiter String.
 			 *  @param  delimiter  The String to split on. The delimiter will be
 			 *  removed in the output.
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(n), n = size()
 			 */
 			DynamicArray<String> split(String delimiter)
 			{
@@ -1180,6 +1190,8 @@ namespace flow {
 			/**
 			 *  @brief  Replaces all lowercase characters [a-z] with their
 			 *  corresponding capital representation [A-Z].
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(n), n = size()
 			 */
 			void transform_to_uppercase()
 			{
@@ -1192,6 +1204,8 @@ namespace flow {
 			/**
 			 *  @brief  Replaces all uppercase characters [A-Z] with their
 			 *  corresponding lowercase representation [a-z].
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(n), n = size()
 			 */
 			void transform_to_lowercase()
 			{
