@@ -125,6 +125,19 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Returns a copy of itself.
+			 *  @note  Runtime: O(n)
+			 *  @note  Memory: O(n)
+			 */
+			DynamicArray<type> copy_self()
+			{
+				DynamicArray<type> copy(current_buffer_size);
+				copy.unsafe_increment_element_count(current_element_count);
+				copy.copy_from(this);
+				return copy;
+			}
+
+			/**
 			 *  @brief  Releases the internal buffer and resets the DynamicArray.
 			 *  Creates a new buffer with a given starting_size.
 			 *  @param  starting_size  The initial size of the new buffer.
