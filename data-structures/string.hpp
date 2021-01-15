@@ -1369,6 +1369,13 @@ namespace flow {
 										goto end_specifier;
 								}
 
+							case 'S':
+							{
+								String& str_arg = va_arg(args, String);
+								size += str_arg.size();
+								goto end_specifier;
+							}
+
 							case 'h':
 								if (length_modifier_set) {
 									printf("Cannot set length modifier twice\n");
@@ -1402,6 +1409,11 @@ namespace flow {
 								}
 
 								goto continue_specifier;
+
+							default:
+								printf("Unknown modifier %c passed to String::format()\n",
+									fmt[i]);
+								exit(1);
 						}
 					} else {
 						size++;
@@ -1595,9 +1607,24 @@ namespace flow {
 									}
 								}
 
+							case 'S':
+							{
+								if (length_modifier_set) {
+									printf("Incorrect usage of length modifiers");
+									exit(1);
+								}
+
+								String& str_arg = va_arg(args, String);
+								size_t str_size = str_arg.size();
+								memcpy(buf + buf_offset, str_arg.begin(), str_size);
+								buf_offset += str_size;
+
+								goto end_specifier_1;
+							}
+
 							case 'h':
 								if (length_modifier_set) {
-									printf("Cannot set length modifier twice\n");
+									printf("Cannot set length modifier twice (h)\n");
 									exit(1);
 								}
 
@@ -1614,7 +1641,7 @@ namespace flow {
 
 							case 'l':
 								if (length_modifier_set) {
-									printf("Cannot set length modifier twice\n");
+									printf("Cannot set length modifier twice (l)\n");
 									exit(1);
 								}
 
