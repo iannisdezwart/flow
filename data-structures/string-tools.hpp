@@ -17,7 +17,8 @@ namespace flow_tools {
 
 	template <uint8_t base = 10, typename uintx_t,
 		char starting_alphabetical_digit = 'A'>
-	uint8_t write_uint_to_str(uintx_t num, char *buf)
+	uint8_t write_uint_to_str(uintx_t num, char *buf,
+		char pad_char = '\0', size_t pad_size = 0)
 	{
 		if (num == 0) {
 			*buf = '0';
@@ -32,17 +33,27 @@ namespace flow_tools {
 			n /= base;
 		}
 
+		size_t remaining_pad_size;
+
+		if (pad_size > length) remaining_pad_size = pad_size - length;
+		else remaining_pad_size = 0;
+
+		for (size_t i = 0; i < remaining_pad_size; i++) {
+			*buf++ = pad_char;
+		}
+
 		for (size_t i = length; i != 0; i--) {
 			char digit = get_base_digit<starting_alphabetical_digit>(num % base);
 			buf[i - 1] = digit;
 			num /= base;
 		}
 
-		return length;
+		return length + remaining_pad_size;
 	}
 
 	template <uint8_t base = 10, typename intx_t>
-	uint8_t write_int_to_str(intx_t num, char *buf)
+	uint8_t write_int_to_str(intx_t num, char *buf,
+		char pad_char = '\0', size_t pad_size = 0)
 	{
 		if (num == 0) {
 			*buf = '0';
@@ -70,13 +81,40 @@ namespace flow_tools {
 			n /= base;
 		}
 
+		size_t remaining_pad_size;
+
+		if (pad_size > length) remaining_pad_size = pad_size - length;
+		else remaining_pad_size = 0;
+
+		for (size_t i = 0; i < remaining_pad_size - is_signed; i++) {
+			*buf++ = pad_char;
+		}
+
 		for (size_t i = length; i != 0; i--) {
 			char digit = get_base_digit(multiplier * (num % base));
 			buf[i - 1] = digit;
 			num /= base;
 		}
 
-		return length + (is_signed ? 1 : 0);
+		return length + remaining_pad_size + (is_signed ? 1 : 0);
+	}
+
+	struct UintFromStr {
+		size_t val;
+		size_t len;
+	};
+
+	UintFromStr read_uint_from_str(const char *buf)
+	{
+		UintFromStr num_and_len = { 0, 0 };
+
+		while (*buf >= '0' && *buf <= '9') {
+			num_and_len.val *= 10;
+			num_and_len.val += *buf++ - '0';
+			num_and_len.len++;
+		}
+
+		return num_and_len;
 	}
 };
 
