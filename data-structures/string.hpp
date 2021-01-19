@@ -1234,8 +1234,15 @@ namespace flow {
 				#define SIZE_32 2
 				#define SIZE_64 3
 
+				#define err(message, ...) \
+					fprintf(stderr, message, ##__VA_ARGS__); \
+					exit(1)
+
 				uint8_t length_modifier = SIZE_32;
 				bool length_modifier_set = false;
+				char pad_char = '\0';
+				size_t pad_size = 0;
+				size_t num_size;
 
 				while (fmt[i] != '\0') {
 					if (fmt[i] == '%') {
@@ -1250,30 +1257,33 @@ namespace flow {
 										// Max length is 4 ("-128")
 
 										va_arg(args, int32_t);
-										size += 4;
-										goto end_specifier;
+										num_size = 4;
+										break;
 
 									case SIZE_16:
 										// Max length is 6 ("-32768")
 
 										va_arg(args, int32_t);
-										size += 6;
-										goto end_specifier;
+										num_size = 6;
+										break;
 
 									case SIZE_32:
 										// Max length is 11 ("-2147483648")
 
 										va_arg(args, int32_t);
-										size += 11;
-										goto end_specifier;
+										num_size = 11;
+										break;
 
 									case SIZE_64:
 										// Max length is 20 ("-9223372036854775808")
 
 										va_arg(args, int64_t);
-										size += 20;
-										goto end_specifier;
+										num_size = 20;
+										break;
 								}
+
+								size += max(num_size, pad_size);
+								goto end_specifier;
 
 							case 'u':
 								switch (length_modifier) {
@@ -1281,30 +1291,33 @@ namespace flow {
 										// Max length is 3 ("256")
 
 										va_arg(args, uint32_t);
-										size += 3;
-										goto end_specifier;
+										num_size = 3;
+										break;
 
 									case SIZE_16:
 										// Max length is 5 ("65536")
 
 										va_arg(args, uint32_t);
-										size += 5;
-										goto end_specifier;
+										num_size = 5;
+										break;
 
 									case SIZE_32:
 										// Max length is 10 ("4294967296")
 
 										va_arg(args, uint32_t);
-										size += 10;
-										goto end_specifier;
+										num_size = 10;
+										break;
 
 									case SIZE_64:
 										// Max length is 20 ("18446744073709551616")
 
 										va_arg(args, uint64_t);
-										size += 20;
-										goto end_specifier;
+										num_size = 20;
+										break;
 								}
+
+								size += max(num_size, pad_size);
+								goto end_specifier;
 
 							case 'o':
 								switch (length_modifier) {
@@ -1312,30 +1325,33 @@ namespace flow {
 										// Max length is 5 ("0o400")
 
 										va_arg(args, uint32_t);
-										size += 5;
-										goto end_specifier;
+										num_size = 5;
+										break;
 
 									case SIZE_16:
 										// Max length is 8 ("0o200000")
 
 										va_arg(args, uint32_t);
-										size += 8;
-										goto end_specifier;
+										num_size = 8;
+										break;
 
 									case SIZE_32:
 										// Max length is 13 ("0o40000000000")
 
 										va_arg(args, uint32_t);
-										size += 13;
-										goto end_specifier;
+										num_size = 13;
+										break;
 
 									case SIZE_64:
 										// Max length is 24 ("0o2000000000000000000000")
 
 										va_arg(args, uint64_t);
-										size += 24;
-										goto end_specifier;
+										num_size = 24;
+										break;
 								}
+
+								size += max(num_size, pad_size);
+								goto end_specifier;
 
 							case 'x':
 							case 'X':
@@ -1344,30 +1360,40 @@ namespace flow {
 										// Max length is 5 ("0x100")
 
 										va_arg(args, uint32_t);
-										size += 5;
-										goto end_specifier;
+										num_size = 5;
+										break;
 
 									case SIZE_16:
 										// Max length is 7 ("0x10000")
 
 										va_arg(args, uint32_t);
-										size += 7;
-										goto end_specifier;
+										num_size = 7;
+										break;
 
 									case SIZE_32:
 										// Max length is 11 ("0x100000000")
 
 										va_arg(args, uint32_t);
-										size += 11;
-										goto end_specifier;
+										num_size = 11;
+										break;
 
 									case SIZE_64:
 										// Max length is 19 ("0x10000000000000000")
 
 										va_arg(args, uint64_t);
-										size += 19;
-										goto end_specifier;
+										num_size = 19;
+										break;
 								}
+
+								size += max(num_size, pad_size);
+								goto end_specifier;
+
+							case 's':
+							{
+								const char *char_arr_arg = va_arg(args, const char *);
+								size += strlen(char_arr_arg);
+								goto end_specifier;
+							}
 
 							case 'S':
 							{
@@ -1376,10 +1402,42 @@ namespace flow {
 								goto end_specifier;
 							}
 
+							case '0':
+							{
+								if (pad_char) {
+									err("Cannot set padding modifier twice (0)\n");
+								}
+
+								pad_char = '0';
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
+
+								pad_size = num_and_len.val;
+
+								goto continue_specifier;
+							}
+
+							case '-':
+							{
+								if (pad_char) {
+									err("Cannot set padding modifier twice (-)\n");
+								}
+
+								pad_char = ' ';
+
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
+
+								pad_size = num_and_len.val;
+
+								goto continue_specifier;
+							}
+
 							case 'h':
 								if (length_modifier_set) {
-									printf("Cannot set length modifier twice\n");
-									exit(1);
+									err("Cannot set length modifier twice\n");
 								}
 
 								length_modifier_set = true;
@@ -1395,8 +1453,7 @@ namespace flow {
 
 							case 'l':
 								if (length_modifier_set) {
-									printf("Cannot set length modifier twice\n");
-									exit(1);
+									err("Cannot set length modifier twice\n");
 								}
 
 								length_modifier_set = true;
@@ -1411,9 +1468,8 @@ namespace flow {
 								goto continue_specifier;
 
 							default:
-								printf("Unknown modifier %c passed to String::format()\n",
+								err("Unknown modifier %c passed to String::format()\n",
 									fmt[i]);
-								exit(1);
 						}
 					} else {
 						size++;
@@ -1422,6 +1478,8 @@ namespace flow {
 					end_specifier:
 					length_modifier = SIZE_32;
 					length_modifier_set = false;
+					pad_char = '\0';
+					pad_size = 0;
 					i++;
 				}
 
@@ -1447,7 +1505,7 @@ namespace flow {
 									{
 										int8_t num = va_arg(args, int32_t);
 										buf_offset += flow_tools::write_int_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 
 										goto end_specifier_1;
 									}
@@ -1456,7 +1514,7 @@ namespace flow {
 									{
 										int16_t num = va_arg(args, int32_t);
 										buf_offset += flow_tools::write_int_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1464,7 +1522,7 @@ namespace flow {
 									{
 										int32_t num = va_arg(args, int32_t);
 										buf_offset += flow_tools::write_int_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1472,7 +1530,7 @@ namespace flow {
 									{
 										int64_t num = va_arg(args, int64_t);
 										buf_offset += flow_tools::write_int_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 								}
@@ -1483,7 +1541,7 @@ namespace flow {
 									{
 										uint8_t num = va_arg(args, uint32_t);
 										buf_offset += flow_tools::write_uint_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1491,7 +1549,7 @@ namespace flow {
 									{
 										uint16_t num = va_arg(args, uint32_t);
 										buf_offset += flow_tools::write_uint_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1499,7 +1557,7 @@ namespace flow {
 									{
 										uint32_t num = va_arg(args, uint32_t);
 										buf_offset += flow_tools::write_uint_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1507,7 +1565,7 @@ namespace flow {
 									{
 										uint64_t num = va_arg(args, uint64_t);
 										buf_offset += flow_tools::write_uint_to_str(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 								}
@@ -1521,7 +1579,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'o';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<8>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1532,7 +1590,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'o';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<8>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1543,7 +1601,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'o';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<8>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1554,7 +1612,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'o';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<8>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 								}
@@ -1569,7 +1627,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'x';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<16>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1580,7 +1638,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'x';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<16>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1591,7 +1649,7 @@ namespace flow {
 										buf[buf_offset + 1] = 'x';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<16>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 
@@ -1602,18 +1660,26 @@ namespace flow {
 										buf[buf_offset + 1] = 'x';
 										buf_offset += 2;
 										buf_offset += flow_tools::write_uint_to_str<16>(
-											num, buf + buf_offset);
+											num, buf + buf_offset, pad_char, pad_size);
 										goto end_specifier_1;
 									}
 								}
 
-							case 'S':
+							case 's':
 							{
-								if (length_modifier_set) {
-									printf("Incorrect usage of length modifiers");
-									exit(1);
+								const char *c = va_arg(args, const char *);
+								size_t len = 0;
+
+								while (*c != '\0') {
+									buf[buf_offset++] = *c++;
+									len++;
 								}
 
+								goto end_specifier_1;
+							}
+
+							case 'S':
+							{
 								String& str_arg = va_arg(args, String);
 								size_t str_size = str_arg.size();
 								memcpy(buf + buf_offset, str_arg.begin(), str_size);
@@ -1622,12 +1688,33 @@ namespace flow {
 								goto end_specifier_1;
 							}
 
-							case 'h':
-								if (length_modifier_set) {
-									printf("Cannot set length modifier twice (h)\n");
-									exit(1);
-								}
+							case '0':
+							{
+								pad_char = '0';
 
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
+
+								pad_size = num_and_len.val;
+
+								goto continue_specifier_1;
+							}
+
+							case '-':
+							{
+								pad_char = ' ';
+
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
+
+								pad_size = num_and_len.val;
+
+								goto continue_specifier_1;
+							}
+
+							case 'h':
 								length_modifier_set = true;
 
 								if (fmt[i + 1] == 'h') {
@@ -1640,11 +1727,6 @@ namespace flow {
 								goto continue_specifier_1;
 
 							case 'l':
-								if (length_modifier_set) {
-									printf("Cannot set length modifier twice (l)\n");
-									exit(1);
-								}
-
 								length_modifier_set = true;
 
 								if (fmt[i + 1] == 'l') {
@@ -1663,6 +1745,8 @@ namespace flow {
 					end_specifier_1:
 					length_modifier = SIZE_32;
 					length_modifier_set = false;
+					pad_char = '\0';
+					pad_size = 0;
 					i++;
 				}
 
