@@ -50,18 +50,23 @@ namespace flow {
 			 *  @brief  Removes a listener from this EventEmitter.
 			 *  @param  listener_id  The id returned upon adding a listener with
 			 *  EventEmitter::add_listener().
+			 *  @returns  A boolean indicating whether the listener has been found
+			 *  and got removed.
 			 */
-			void remove_listener(size_t listener_id)
+			bool remove_listener(size_t listener_id)
 			{
+				bool found = false;
 				size_t listeners_size = listeners.size();
 
 				for (size_t i = 0; i < listeners_size; i++) {
 					if (listeners[i].id == listener_id && i != listeners_size - 1) {
+						found = true;
 						listeners[i] = listeners[listeners_size - 1];
 					}
 				}
 
 				listeners.extract_rear();
+				return found;
 			}
 
 			/**
