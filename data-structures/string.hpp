@@ -1250,6 +1250,10 @@ namespace flow {
 						i++;
 
 						switch (fmt[i]) {
+							case '%':
+								size++;
+									goto end_specifier;
+
 							case 'd':
 							case 'i':
 								switch (length_modifier) {
@@ -1498,6 +1502,10 @@ namespace flow {
 						i++;
 
 						switch (fmt[i]) {
+							case '%':
+								buf[buf_offset++] = '%';
+								goto end_specifier_1;
+
 							case 'd':
 							case 'i':
 								switch (length_modifier) {
