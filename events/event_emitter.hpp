@@ -20,7 +20,6 @@ namespace flow {
 	/**
 	 *  @brief  Event handling class. Listeners can be added and triggered.
 	 */
-
 	template <typename... Args>
 	class EventEmitter {
 		private:
