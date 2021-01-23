@@ -71,7 +71,9 @@ namespace flow {
 
 			/**
 			 *  @brief  Triggers all currently existing listeners with the
-			 *  user defined argument template.
+			 *  user defined argument template. The order of the triggered
+			 *  listeners is undefined if EventEmitter::remove_listener(...) was
+			 *  called OR EventEmitter::add_listener(..., false) was called.
 			 */
 			void trigger(Args... args)
 			{
