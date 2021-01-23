@@ -92,6 +92,14 @@ namespace flow {
 					}
 				}
 			}
+
+			/**
+			 *  @brief  Returns the amount of active listeners to the EventEmitter.
+			 */
+			size_t size()
+			{
+				return listeners.size();
+			}
 	};
 };
 
