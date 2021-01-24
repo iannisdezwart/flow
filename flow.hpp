@@ -8,5 +8,7 @@
 #include "events/event_emitter.hpp"
 #include "formatting/ansi.hpp"
 #include "debug/timer.hpp"
+#include "maths/vector.hpp"
+#include "maths/matrix.hpp"
 
 #endif
