@@ -211,7 +211,12 @@ namespace flow {
 			 */
 			void set_at_index(size_t index, type value)
 			{
-				if (index >= current_element_count) throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
+				if (index >= current_element_count) {
+					throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				}
+				#endif
+
 				buffer[index] = value;
 			}
 
@@ -221,7 +226,12 @@ namespace flow {
 			 */
 			type & operator[](size_t index)
 			{
-				if (index >= current_element_count) throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
+				if (index >= current_element_count) {
+					throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				}
+				#endif
+
 				return buffer[index];
 			}
 
@@ -232,7 +242,12 @@ namespace flow {
 			 */
 			void operator[](size_t index) const
 			{
-				if (index >= current_element_count) throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
+				if (index >= current_element_count) {
+					throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
+				}
+				#endif
+
 				return buffer[index];
 			}
 
@@ -571,6 +586,70 @@ namespace flow {
 
 					set_at_index(j, stored);
 				}
+			}
+
+			/**
+			 *  @brief  Shifts the elements on this DynamicArray to the left
+			 *  by some offset. The items that would fall off on the left, are
+			 *  circularly prepended to the right.
+			 *  Use DynamicArray::shift_right() or DynamicArray::shift_right() to
+			 *  do the same but delete the items that would fall off.
+			 *  @param  offset  The offset by which to rotate the array
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(1)
+			 */
+			void rotate_left(size_t offset)
+			{
+				offset %= size;
+				if (offset == 0) return;
+
+				size_t first = 0;
+				size_t last = size();
+				size_t i = offset;
+				size_t middle = offset;
+
+				// Swap rotate left hand side
+
+				while (true) {
+					this->swap_indices(first, i);
+					first++;
+					i++;
+
+					if (i == last) break;
+					if (first == middle) middle = i;
+				}
+
+				// Fix right hand side
+
+				if (first != middle) {
+					i = middle;
+
+					while (true) {
+						this->swap_indices(first, i);
+						first++;
+						i++;
+
+						if (i == last) {
+							if (first == middle) break;
+							i = middle;
+						} else if (first == middle) middle = i;
+					}
+				}
+			}
+
+			/**
+			 *  @brief  Shifts the elements on this DynamicArray to the right
+			 *  by some offset. The items that would fall off on the right, are
+			 *  circularly prepended to the left.
+			 *  Use DynamicArray::shift_right() or DynamicArray::shift_right() to
+			 *  do the same but delete the items that would fall off.
+			 *  @param  offset  The offset by which to rotate the array
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(1)
+			 */
+			void rotate_right(size_t offset)
+			{
+				rotate_left(size() - offset);
 			}
 	};
 };
