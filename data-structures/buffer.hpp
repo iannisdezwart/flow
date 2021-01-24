@@ -77,9 +77,11 @@ namespace flow {
 			 */
 			void swap_indices(size_t index_1, size_t index_2)
 			{
+				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index_1 > size() || index_2 > size()) {
 					throw BufferErrors::INDEX_OUT_OF_RANGE;
 				}
+				#endif
 
 				type value_1 = get_at_index(index_1);
 				*(begin() + index_1) = *(begin() + index_2);
