@@ -7,5 +7,6 @@
 #include "data-structures/string.hpp"
 #include "events/event_emitter.hpp"
 #include "formatting/ansi.hpp"
+#include "debug/timer.hpp"
 
 #endif
