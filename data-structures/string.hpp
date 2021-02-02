@@ -82,7 +82,7 @@ namespace flow {
 			 *  @brief  Attaches a sequence of characters to the end of this String.
 			 *  The String will automatically grow to a power of 2 if needed.
 			 *  @param  chars  The sequence of characters to attach to this String.
-			 *  @note  Runtime: O(n), n = char_count
+			 *  @note  Runtime: O(n), n = size() + char_count
 			 *  @note  Memory: O(1)
 			 */
 			template <size_t char_count>
@@ -105,17 +105,48 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Attaches another String to the end of this String.
+			 *  The String will automatically grow to a power of 2 if needed.
+			 *  @param  str  The other String to attach to this String.
+			 *  @note  Runtime: O(n), n = size() + str.size()
+			 *  @note  Memory: O(1)
+			 */
+			void attach(String& str)
+			{
+				// Allocate space for all new characters
+
+				reserve(str.size());
+
+				// Attach the characters to this String
+
+				for (size_t i = 0; i < str.size(); i++) {
+					// Don't worry, we reserved enough space and are calling
+					// unsafe_increment_element_count afterwards
+
+					unsafe_append(str[i], i);
+				}
+
+				unsafe_increment_element_count(str.size());
+			}
+
+			/**
 			 *  @brief  Attaches a sequence of characters to the end of this String.
 			 *  The String will automatically grow to a power of 2 if needed.
 			 *  @param  chars  The sequence of characters to attach to this String.
-			 *  @note  Runtime: O(n), n = char_count
+			 *  @note  Runtime: O(n), n = size() + char_count
 			 *  @note  Memory: O(1)
 			 */
 			template <size_t char_count>
-			void operator+=(const char (&chars)[char_count])
-			{
-				attach(chars);
-			}
+			void operator+=(const char (&chars)[char_count]) { attach(chars); }
+
+			/**
+			 *  @brief  Attaches another String to the end of this String.
+			 *  The String will automatically grow to a power of 2 if needed.
+			 *  @param  str  The other String to attach to this String.
+			 *  @note  Runtime: O(n), n = size() + str.size()
+			 *  @note  Memory: O(1)
+			 */
+			void operator+=(String& str) { attach(str); }
 
 			/**
 			 *  @brief  Alter this String by repeats it a certain amount of times.
@@ -1839,6 +1870,17 @@ namespace flow {
 
 				putc('\n', stream);
 			}
+
+			static String from_num(uint8_t num)  { return String::format("%hhu",  num); }
+			static String from_num(int8_t num)   { return String::format("%hhd",  num); }
+			static String from_num(uint16_t num) { return String::format("%hu",   num); }
+			static String from_num(int16_t num)  { return String::format("%hd",   num); }
+			static String from_num(uint32_t num) { return String::format("%lu",   num); }
+			static String from_num(int32_t num)  { return String::format("%ld",   num); }
+			static String from_num(uint64_t num) { return String::format("%llu",  num); }
+			static String from_num(int64_t num)  { return String::format("%lld",  num); }
+			static String from_num(float num)    { return String::format("%.6f",  num); }
+			static String from_num(double num)   { return String::format("%.15f", num); }
 	};
 };
 
