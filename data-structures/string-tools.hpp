@@ -85,8 +85,9 @@ namespace flow_tools {
 
 		if (pad_size > length) remaining_pad_size = pad_size - length;
 		else remaining_pad_size = 0;
+		if (remaining_pad_size != 0 && is_signed) remaining_pad_size--;
 
-		for (size_t i = 0; i < remaining_pad_size - is_signed; i++) {
+		for (size_t i = 0; i < remaining_pad_size; i++) {
 			*buf++ = pad_char;
 		}
 
