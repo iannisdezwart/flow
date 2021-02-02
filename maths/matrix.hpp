@@ -18,7 +18,8 @@ namespace flow {
 			 *  @brief  Initialises this Matrix with an initializer_list like:
 			 *  { { 1, 2 }, { 3, 4 } }
 			 */
-			Matrix(initializer_list<initializer_list<num_t>> init) {
+			Matrix(initializer_list<initializer_list<num_t>> init)
+			{
 				size_t y = 0;
 
 				for (initializer_list<num_t> init_row : init) {
@@ -32,6 +33,17 @@ namespace flow {
 
 					if (++y == size_y) break;
 				}
+			}
+
+			/**
+			 *  @brief  Initialises all elements of this Matrix with a value.
+			 *  @param  value  The initial value of each element.
+			 */
+			Matrix(num_t value)
+			{
+				for (size_t y = 0; y < size_y; y++)
+					for (size_t x = 0; x < size_x; x++)
+						values[y][x] = value;
 			}
 
 			/**
@@ -168,6 +180,49 @@ namespace flow {
 				}
 
 				return m;
+			}
+
+			/**
+			 *  @brief  Returns a String representation of this Matrix.
+			 */
+			String to_string()
+			{
+				String str = "{";
+
+				for (size_t y = 0; y < size_y; y++) {
+					if (y == 0) str += " "; // Leading space
+
+					String vector_str = values[y].to_string();
+					str += vector_str;
+
+					if (y != size_y - 1) str += ", "; // Comma seperator
+					else str += " "; // Trailing space
+				}
+
+				str += "}";
+				return str;
+			}
+
+			/**
+			 *  @brief  Returns a String representation of this Matrix with
+			 * 	each row on its own line.
+			 */
+			String to_string_with_newlines()
+			{
+				String str = "{";
+
+				for (size_t y = 0; y < size_y; y++) {
+					if (y == 0) str += "\n\t"; // Leading newline and tab
+
+					String vector_str = values[y].to_string();
+					str += vector_str;
+
+					if (y != size_y - 1) str += ",\n\t"; // Comma seperator
+					else str += "\n"; // Trailing newline
+				}
+
+				str += "}";
+				return str;
 			}
 	};
 };

@@ -132,6 +132,27 @@ namespace flow {
 
 				return res;
 			}
+
+			/**
+			 *  @brief  Returns a String representation of this Vector.
+			 */
+			String to_string()
+			{
+				String str = "{";
+
+				for (size_t i = 0; i < size; i++) {
+					if (i == 0) str += " "; // Leading space
+
+					String num = String::from_num(values[i]);
+					str += num;
+
+					if (i != size - 1) str += ", "; // Comma seperator
+					else str += " "; // Trailing space
+				}
+
+				str += "}";
+				return str;
+			}
 	};
 };
 
