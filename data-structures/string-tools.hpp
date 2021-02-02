@@ -17,7 +17,7 @@ namespace flow_tools {
 
 	template <uint8_t base = 10, typename uintx_t,
 		char starting_alphabetical_digit = 'A'>
-	uint8_t write_uint_to_str(uintx_t num, char *buf,
+	size_t write_uint_to_str(uintx_t num, char *buf,
 		char pad_char = '\0', size_t pad_size = 0)
 	{
 		if (num == 0) {
@@ -52,7 +52,7 @@ namespace flow_tools {
 	}
 
 	template <uint8_t base = 10, typename intx_t>
-	uint8_t write_int_to_str(intx_t num, char *buf,
+	size_t write_int_to_str(intx_t num, char *buf,
 		char pad_char = '\0', size_t pad_size = 0)
 	{
 		if (num == 0) {
@@ -115,6 +115,57 @@ namespace flow_tools {
 		}
 
 		return num_and_len;
+	}
+
+	template <size_t size>
+	size_t copy_str(const char (&source)[size], char *dest)
+	{
+		for (size_t i = 0; i < size - 1; i++) {
+			*dest++ = source[i];
+		}
+
+		return size - 1;
+	}
+
+	template <typename float_t>
+	size_t write_float_to_str(float_t num, char *buf, uint8_t fraction_digits,
+		char pad_char = '\0', size_t pad_size = 0)
+	{
+		if (isnan(num)) return copy_str("NaN", buf);
+		if (isinf(num)) return copy_str("Inf", buf);
+
+		size_t length = 0;
+
+		if (num < 0) {
+			*buf++ = '-';
+			length += 1;
+			num = -num;
+		}
+
+		int exp = max(floor(log10(num)), (float_t) 0);
+
+		while (exp >= -fraction_digits) {
+			double digit_place = exp10(exp);
+			uint8_t digit = floor(num / digit_place) + FLT_EPSILON;
+
+			// printf("digit_place = %.15f, digit = %hhu, num =  %.15f\n",
+			// 	digit_place, digit, num);
+
+			num -= digit * digit_place;
+			*buf++ = '0' + digit;
+
+			if (exp == 0 && fraction_digits != 0) {
+				*buf++ = '.';
+				length++;
+			}
+
+			length++;
+			exp--;
+		}
+
+		// Todo: round numbers correctly
+
+		return length;
 	}
 };
 

@@ -1242,6 +1242,8 @@ namespace flow {
 				bool length_modifier_set = false;
 				char pad_char = '\0';
 				size_t pad_size = 0;
+				size_t precision = 6;
+				bool precision_modifier_set = false;
 				size_t num_size;
 
 				while (fmt[i] != '\0') {
@@ -1392,6 +1394,27 @@ namespace flow {
 								size += max(num_size, pad_size);
 								goto end_specifier;
 
+							case 'f':
+								switch (length_modifier) {
+									case SIZE_8:
+									case SIZE_16:
+										err("No support for 8 or 16-bit floating point numbers");
+
+									case SIZE_32:
+									case SIZE_64:
+									{
+										double num = va_arg(args, double);
+										num_size = max(log10(abs(num)) + 1, 1.0) + 1;
+										break;
+									}
+								}
+
+								// Fraction digits
+
+								if (precision) num_size += precision + 1; // '.' character
+								size += max(num_size, pad_size);
+								goto end_specifier;
+
 							case 's':
 							{
 								const char *char_arr_arg = va_arg(args, const char *);
@@ -1435,6 +1458,23 @@ namespace flow {
 								i += num_and_len.len;
 
 								pad_size = num_and_len.val;
+
+								goto continue_specifier;
+							}
+
+							case '.':
+							{
+								if (precision_modifier_set) {
+									err("Cannot set precision modifier twice (.)\n");
+								}
+
+								precision_modifier_set = true;
+
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
+
+								precision = num_and_len.val;
 
 								goto continue_specifier;
 							}
@@ -1484,6 +1524,8 @@ namespace flow {
 					length_modifier_set = false;
 					pad_char = '\0';
 					pad_size = 0;
+					precision = 6;
+					precision_modifier_set = false;
 					i++;
 				}
 
@@ -1673,6 +1715,18 @@ namespace flow {
 									}
 								}
 
+							case 'f':
+								switch (length_modifier) {
+									case SIZE_32:
+									case SIZE_64:
+									{
+										double num = va_arg(args, double);
+										buf_offset += flow_tools::write_float_to_str(
+											num, buf + buf_offset, precision);
+										goto end_specifier_1;
+									}
+								}
+
 							case 's':
 							{
 								const char *c = va_arg(args, const char *);
@@ -1722,9 +1776,18 @@ namespace flow {
 								goto continue_specifier_1;
 							}
 
-							case 'h':
-								length_modifier_set = true;
+							case '.':
+							{
+								flow_tools::UintFromStr num_and_len =
+									flow_tools::read_uint_from_str(fmt + i + 1);
+								i += num_and_len.len;
 
+								precision = num_and_len.val;
+
+								goto continue_specifier_1;
+							}
+
+							case 'h':
 								if (fmt[i + 1] == 'h') {
 									i++;
 									length_modifier = SIZE_8;
@@ -1735,8 +1798,6 @@ namespace flow {
 								goto continue_specifier_1;
 
 							case 'l':
-								length_modifier_set = true;
-
 								if (fmt[i + 1] == 'l') {
 									i++;
 									length_modifier = SIZE_64;
@@ -1752,9 +1813,9 @@ namespace flow {
 
 					end_specifier_1:
 					length_modifier = SIZE_32;
-					length_modifier_set = false;
 					pad_char = '\0';
 					pad_size = 0;
+					precision = 6;
 					i++;
 				}
 
