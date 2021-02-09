@@ -211,28 +211,48 @@ namespace flow_tools {
 			num = -num;
 		}
 
+		float_t n = num;
 		int exp = max(floor(log10(num)), (float_t) 0);
+		int e = exp;
+		uint8_t rounding_digit;
+		double digit_place;
 
-		while (exp >= -fraction_digits) {
-			double digit_place = exp10(exp);
-			uint8_t digit = floor(num / digit_place) + FLT_EPSILON;
+		while (e >= -fraction_digits - 1) {
+			digit_place = exp10(e);
+			rounding_digit = floor(n / digit_place);
 
-			// printf("digit_place = %.15f, digit = %hhu, num =  %.15f\n",
-			// 	digit_place, digit, num);
+			printf("digit_place = %.15f, digit = %hhu, n =  %.15f\n",
+				digit_place, rounding_digit, n);
 
-			num -= digit * digit_place;
+			n -= rounding_digit * digit_place;
+			e--;
+		}
+
+		if (rounding_digit >= 5) {
+			num += 5 * digit_place;
+		}
+
+		n = num;
+		e = exp;
+
+		while (e >= -fraction_digits) {
+			digit_place = exp10(e);
+			uint8_t digit = floor(n / digit_place);
+
+			// printf("digit_place = %.15f, digit = %hhu, n =  %.15f\n",
+			// 	digit_place, digit, n);
+
+			n -= digit * digit_place;
 			*buf++ = '0' + digit;
 
-			if (exp == 0 && fraction_digits != 0) {
+			if (e == 0 && fraction_digits != 0) {
 				*buf++ = '.';
 				length++;
 			}
 
 			length++;
-			exp--;
+			e--;
 		}
-
-		// Todo: round numbers correctly
 
 		return length;
 	}
