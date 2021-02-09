@@ -221,9 +221,6 @@ namespace flow_tools {
 			digit_place = exp10(e);
 			rounding_digit = floor(n / digit_place);
 
-			printf("digit_place = %.15f, digit = %hhu, n =  %.15f\n",
-				digit_place, rounding_digit, n);
-
 			n -= rounding_digit * digit_place;
 			e--;
 		}
@@ -238,9 +235,6 @@ namespace flow_tools {
 		while (e >= -fraction_digits) {
 			digit_place = exp10(e);
 			uint8_t digit = floor(n / digit_place);
-
-			// printf("digit_place = %.15f, digit = %hhu, n =  %.15f\n",
-			// 	digit_place, digit, n);
 
 			n -= digit * digit_place;
 			*buf++ = '0' + digit;
