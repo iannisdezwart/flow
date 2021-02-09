@@ -15,6 +15,23 @@ namespace flow_tools {
 		return starting_alphabetical_digit - 10 + num;
 	}
 
+	/**
+	 *  @brief  Writes an unsigned integer to a string. Does not check if
+	 *  there is enough space left on the buffer.
+	 *  @tparam  base  In what number system to display the number, defaults to 10.
+	 *  @tparam  uintx_t  The type of the number to write.
+	 *  @tparam  starting_alphabetical_digit  'a' or 'A', defaults to 'A'.
+	 *  Used to indicate whether base 11+ numbers should be written with
+	 *  upper or lower case letters.
+	 *  @param  num  The number to write.
+	 *  @param  buf  The character buffer to write the number to.
+	 *  @param  pad_char  The character used for left padding.
+	 *  @param  pad_size  The minimum length of the displayed number. If the
+	 *  length of the number turns out to be smaller than this, the pad_char is
+	 *  padded at the left of the string to make the number fit the desired
+	 *  minimum length.
+	 *  @returns  The total number of bytes written to the buffer.
+	 */
 	template <uint8_t base = 10, typename uintx_t,
 		char starting_alphabetical_digit = 'A'>
 	size_t write_uint_to_str(uintx_t num, char *buf,
@@ -51,7 +68,25 @@ namespace flow_tools {
 		return length + remaining_pad_size;
 	}
 
-	template <uint8_t base = 10, typename intx_t>
+	/**
+	 *  @brief  Writes a signed integer to a string. Does not check if
+	 *  there is enough space left on the buffer.
+	 *  @tparam  base  In what number system to display the number, defaults to 10.
+	 *  @tparam  intx_t  The type of the number to write.
+	 *  @tparam  starting_alphabetical_digit  'a' or 'A', defaults to 'A'.
+	 *  Used to indicate whether base 11+ numbers should be written with
+	 *  upper or lower case letters.
+	 *  @param  num  The number to write.
+	 *  @param  buf  The character buffer to write the number to.
+	 *  @param  pad_char  The character used for left padding.
+	 *  @param  pad_size  The minimum length of the displayed number. If the
+	 *  length of the number turns out to be smaller than this, the pad_char is
+	 *  padded at the left of the string to make the number fit the desired
+	 *  minimum length.
+	 *  @returns  The total number of bytes written to the buffer.
+	 */
+	template <uint8_t base = 10, typename intx_t,
+		char starting_alphabetical_digit = 'A'>
 	size_t write_int_to_str(intx_t num, char *buf,
 		char pad_char = '\0', size_t pad_size = 0)
 	{
@@ -92,7 +127,8 @@ namespace flow_tools {
 		}
 
 		for (size_t i = length; i != 0; i--) {
-			char digit = get_base_digit(multiplier * (num % base));
+			char digit = get_base_digit<starting_alphabetical_digit>(
+				multiplier * (num % base));
 			buf[i - 1] = digit;
 			num /= base;
 		}
@@ -101,10 +137,17 @@ namespace flow_tools {
 	}
 
 	struct UintFromStr {
-		size_t val;
+		uint64_t val;
 		size_t len;
 	};
 
+	/**
+	 *  @brief  Reads an unsigned integer in base 10 format from a string.
+	 *  Expects the character at the start of the buffer to be a base 10 digit.
+	 *  @param  buf  The character buffer to read the unsigned integer from.
+	 *  @returns  A UintFromStr structure, containing the value of the number
+	 *  in and the length of the read number in number of bytes.
+	 */
 	UintFromStr read_uint_from_str(const char *buf)
 	{
 		UintFromStr num_and_len = { 0, 0 };
@@ -118,6 +161,14 @@ namespace flow_tools {
 		return num_and_len;
 	}
 
+	/**
+	 *  @brief  Copies a string literal to a destination buffer.
+	 *  The terminating null byte is not copied.
+	 *  @tparam  size  The size of the source string including the null byte.
+	 *  @param  source  A string literal used as source.
+	 *  @param  dest  A pointer to the destination string buffer.
+	 *  @returns  The number of bytes copied, which equals to size - 1.
+	 */
 	template <size_t size>
 	size_t copy_str(const char (&source)[size], char *dest)
 	{
@@ -128,6 +179,23 @@ namespace flow_tools {
 		return size - 1;
 	}
 
+	/**
+	 *  @brief  Writes a floating point number to a string. Does not check if
+	 *  there is enough space left on the buffer. If the number is not a number
+	 *  according to the IEEE 754 standard, "NaN" is written to the buffer.
+	 *  Infinities will be written as "Inf".
+	 *  @tparam  float_t  The type of the floating point number to write.
+	 *  @param  num  The number to write.
+	 *  @param  buf  The character buffer to write the number to.
+	 *  @param  fraction_digits  The number of digits after the decimal
+	 *  separator to display. The number is rounded accordingly.
+	 *  @param  pad_char  The character used for left padding.
+	 *  @param  pad_size  The minimum length of the displayed number. If the
+	 *  length of the number turns out to be smaller than this, the pad_char is
+	 *  padded at the left of the string to make the number fit the desired
+	 *  minimum length.
+	 *  @returns  The total number of bytes written to the buffer.
+	 */
 	template <typename float_t>
 	size_t write_float_to_str(float_t num, char *buf, uint8_t fraction_digits,
 		char pad_char = '\0', size_t pad_size = 0)
