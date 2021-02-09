@@ -134,6 +134,21 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Computes the cross product of two 3D Vectors.
+			 */
+			static Vector<3, num_t> cross_product(
+				const Vector<3, num_t>& v1, const Vector<3, num_t>& v2)
+			{
+				Vector<3, num_t> v = {
+					v1[1] * v2[2] - v1[2] * v2[1],
+					v1[2] * v2[0] - v1[0] * v2[2],
+					v1[0] * v2[1] - v1[1] * v2[0]
+				};
+
+				return v;
+			}
+
+			/**
 			 *  @brief  Returns a String representation of this Vector.
 			 */
 			String to_string()
