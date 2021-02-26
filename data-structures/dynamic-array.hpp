@@ -129,7 +129,7 @@ namespace flow {
 			 *  @note  Runtime: O(n)
 			 *  @note  Memory: O(n)
 			 */
-			DynamicArray<type> copy_self()
+			DynamicArray<type> copy_self() const
 			{
 				DynamicArray<type> copy(current_buffer_size);
 				copy.unsafe_increment_element_count(current_element_count);
@@ -165,7 +165,7 @@ namespace flow {
 			/**
 			 *  @brief  Returns a pointer to the first element of the DynamicArray.
 			 */
-			type *begin()
+			type *begin() const
 			{
 				return buffer;
 			}
@@ -173,7 +173,7 @@ namespace flow {
 			/**
 			 *  @brief  Returns a pointer to the one after last element of the DynamicArray.
 			 */
-			type *end()
+			type *end() const
 			{
 				return buffer + current_element_count;
 			}
@@ -181,7 +181,7 @@ namespace flow {
 			/**
 			 *  @brief  Returns the current number of elements on the DynamicArray.
 			 */
-			size_t size()
+			size_t size() const
 			{
 				return current_element_count;
 			}
@@ -189,7 +189,7 @@ namespace flow {
 			/**
 			 *  @brief  Returns the current internal buffer size of the DynamicArray.
 			 */
-			size_t current_capacity()
+			size_t current_capacity() const
 			{
 				return current_buffer_size;
 			}
@@ -198,7 +198,7 @@ namespace flow {
 			 *  @brief  Gets the i-th element on the buffer.
 			 *  @param  index  i
 			 */
-			type get_at_index(size_t index)
+			type get_at_index(size_t index) const
 			{
 				if (index >= current_element_count) throw DynamicArrayErrors::INDEX_OUT_OF_RANGE;
 				return buffer[index];
@@ -224,7 +224,7 @@ namespace flow {
 			 *  @brief  Gets the i-th element on the buffer.
 			 *  @param  index  i
 			 */
-			type & operator[](size_t index)
+			type& operator[](size_t index) const
 			{
 				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index >= current_element_count) {
@@ -240,7 +240,7 @@ namespace flow {
 			 *  @param  index  i
 			 *  @param  =  The value to assign at the index.
 			 */
-			void operator[](size_t index) const
+			type& operator[](size_t index)
 			{
 				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index >= current_element_count) {
@@ -257,7 +257,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = found indices
 			 */
-			DynamicArray<size_t> indices_of(type value)
+			DynamicArray<size_t> indices_of(type value) const
 			{
 				DynamicArray<size_t> indices;
 

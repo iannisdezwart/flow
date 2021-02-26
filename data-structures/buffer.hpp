@@ -22,23 +22,23 @@ namespace flow {
 			/**
 			 *  @brief  Returns a pointer to the first element of the buffer.
 			 */
-			virtual type *begin() = 0;
+			virtual type *begin() const = 0;
 
 			/**
 			 *  @brief  Returns a pointer to the one after last element of the buffer.
 			 */
-			virtual type *end() = 0;
+			virtual type *end() const = 0;
 
 			/**
 			 *  @brief  Returns the number of elements on the buffer.
 			 */
-			virtual size_t size() = 0;
+			virtual size_t size() const = 0;
 
 			/**
 			 *  @brief  Gets the i-th element on the buffer.
 			 *  @param  index  i
 			 */
-			virtual type get_at_index(size_t index) = 0;
+			virtual type get_at_index(size_t index) const = 0;
 
 			/**
 			 *  @brief  Sets the i-th element on the buffer.
@@ -102,7 +102,7 @@ namespace flow {
 			 *  @brief  Checks if all elements of two buffers are equal.
 			 *  @param  other_buffer  A reference to the buffer to test equality.
 			 */
-			bool equals(Buffer<type>& other_buffer)
+			bool equals(Buffer<type>& other_buffer) const
 			{
 				// Check if the Buffers share memory address
 
@@ -121,7 +121,7 @@ namespace flow {
 			 *  @brief  Checks if all elements of two buffers are equal.
 			 *  @param  other_buffer  A reference to the buffer to test equality.
 			 */
-			bool operator==(Buffer<type>& other_buffer)
+			bool operator==(Buffer<type>& other_buffer) const
 			{
 				return equals(other_buffer);
 			}
@@ -130,7 +130,7 @@ namespace flow {
 			 *  @brief  Checks if not all elements of two buffers are equal.
 			 *  @param  other_buffer  A reference to the buffer to test equality.
 			 */
-			bool operator!=(Buffer<type>& other_buffer)
+			bool operator!=(Buffer<type>& other_buffer) const
 			{
 				return !equals(other_buffer);
 			}
@@ -139,7 +139,7 @@ namespace flow {
 			 *  @brief  Checks if the buffer has a certain value.
 			 *  @param  value  The value to find.
 			 */
-			bool includes(type value)
+			bool includes(type value) const
 			{
 				for (size_t i = 0; i < size(); i++) {
 					if (get_at_index(i) == value) return true;
@@ -152,7 +152,7 @@ namespace flow {
 			 *  @brief  Counts the number of times the buffer has a certain value.
 			 *  @param  value  The value to count the number of appearances of.
 			 */
-			size_t count(type value)
+			size_t count(type value) const
 			{
 				size_t found_values = 0;
 
@@ -169,7 +169,7 @@ namespace flow {
 			 *  @param  starting_index  The index to start searching at.
 			 *  Defaults to 0.
 			 */
-			ssize_t first_index_of(type value, size_t starting_index = 0)
+			ssize_t first_index_of(type value, size_t starting_index = 0) const
 			{
 				for (int i = starting_index; i < size(); i++) {
 					if (get_at_index(i) == value) return i;
@@ -184,7 +184,7 @@ namespace flow {
 			 *  @param  starting_index  The index to start searching at.
 			 *  Defaults to size() - 1. The algorithm runs in decrementing order.
 			 */
-			ssize_t last_index_of(type value, size_t starting_index = size() - 1)
+			ssize_t last_index_of(type value, size_t starting_index = size() - 1) const
 			{
 				for (int i = starting_index; i > 0; i--) {
 					if (get_at_index(i) == value) return i;
