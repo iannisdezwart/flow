@@ -65,6 +65,20 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Checks if two Strings are equal.
+			 */
+			bool operator==(const String& other_str) const
+			{
+				if (size() != other_str.size()) return false;
+
+				for (size_t i = 0; i < size(); i++) {
+					if (get_at_index(i) != other_str[i]) return false;
+				}
+
+				return true;
+			}
+
+			/**
 			 *  @brief  Ensures there is a NULL byte after the String and returns a
 			 *  pointer to the first character of the internal buffer of this String,
 			 *  effectively resolving a constant character array.
@@ -102,6 +116,32 @@ namespace flow {
 				}
 
 				unsafe_increment_element_count(char_count - 1);
+			}
+
+			/**
+			 *  @brief  Attaches a null terminated string to the end of this String.
+			 *  The String will automatically grow to a power of 2 if needed.
+			 *  @param  str  The null terminated string to attach to this String.
+			 *  @note  Runtime: O(n), n = size() + char_count
+			 *  @note  Memory: O(1)
+			 */
+			void attach_c_str(const char *str)
+			{
+				// Allocate space for all new characters
+
+				size_t len = strlen(str);
+				reserve(len);
+
+				// Attach the characters to this String
+
+				for (size_t i = 0; i < len; i++) {
+					// Don't worry, we reserved enough space and are calling
+					// unsafe_increment_element_count afterwards
+
+					unsafe_append(str[i], i);
+				}
+
+				unsafe_increment_element_count(len);
 			}
 
 			/**
@@ -190,7 +230,7 @@ namespace flow {
 			 *  @note  Runtime: O(n + m), n = size(), m = other_string.size()
 			 *  @note  Memory: O(n + m)
 			 */
-			String concatenate(String& other_string)
+			String concatenate(String& other_string) const
 			{
 				size_t new_string_size = size() + other_string.size();
 				String new_string(new_string_size);
@@ -216,7 +256,7 @@ namespace flow {
 			 *  @note  Runtime: O(n + m), n = size(), m = other_string.size()
 			 *  @note  Memory: O(n + m)
 			 */
-			String operator+(String& other_string)
+			String operator+(String& other_string) const
 			{
 				return concatenate(other_string);
 			}
@@ -228,7 +268,7 @@ namespace flow {
 			 *  @note  Runtime: O(n * m), n = size(), m = repeat_count
 			 *  @note  Memory: O(n * m)
 			 */
-			String duplicate(size_t repeat_count)
+			String duplicate(size_t repeat_count) const
 			{
 				size_t new_string_size = size() * repeat_count;
 				String new_string(new_string_size);
@@ -251,7 +291,7 @@ namespace flow {
 			 *  @note  Runtime: O(n * m), n = size(), m = repeat_count
 			 *  @note  Memory: O(n * m)
 			 */
-			String operator*(size_t repeat_count)
+			String operator*(size_t repeat_count) const
 			{
 				return duplicate(repeat_count);
 			}
@@ -263,7 +303,7 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <size_t char_count>
-			bool ends_with(const char (&chars)[char_count])
+			bool ends_with(const char (&chars)[char_count]) const
 			{
 				if (char_count - 1 > size()) return false;
 
@@ -281,7 +321,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = other_string.size()
 			 *  @note  Memory: O(1)
 			 */
-			bool ends_with(String& other_string)
+			bool ends_with(String& other_string) const
 			{
 				if (other_string.size() > size()) return false;
 
@@ -302,7 +342,7 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <size_t char_count>
-			bool starts_with(const char (&chars)[char_count])
+			bool starts_with(const char (&chars)[char_count]) const
 			{
 				if (char_count - 1 > size()) return false;
 
@@ -320,7 +360,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = other_string.size()
 			 *  @note  Memory: O(1)
 			 */
-			bool starts_with(String& other_string)
+			bool starts_with(String& other_string) const
 			{
 				if (other_string.size() > size()) return false;
 
@@ -343,7 +383,7 @@ namespace flow {
 			 *  @note  Memory: O(n), n = found indices
 			 */
 			template <size_t char_count>
-			DynamicArray<size_t> indices_of(const char (&chars)[char_count])
+			DynamicArray<size_t> indices_of(const char (&chars)[char_count]) const
 			{
 				DynamicArray<size_t> indices;
 
@@ -381,7 +421,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = found indices
 			 */
-			DynamicArray<size_t> indices_of(String& other_string)
+			DynamicArray<size_t> indices_of(String& other_string) const
 			{
 				DynamicArray<size_t> indices;
 
@@ -420,7 +460,7 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <size_t char_count>
-			bool includes(const char (&chars)[char_count])
+			bool includes(const char (&chars)[char_count]) const
 			{
 				if (char_count - 1 > size()) return false;
 
@@ -454,7 +494,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(1)
 			 */
-			bool includes(String& other_string)
+			bool includes(String& other_string) const
 			{
 				if (other_string.size() > size()) return false;
 
@@ -488,7 +528,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(1)
 			 */
-			bool includes(const char character)
+			bool includes(const char character) const
 			{
 				for (size_t i = 0; i < size(); i++) {
 					if (get_at_index(i) == character) return true;
@@ -1083,7 +1123,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = min(length, size() - offset)
 			 *  @note  Memory: O(n), n = min(length, size() - offset)
 			 */
-			String substring(size_t offset, size_t length = SIZE_MAX)
+			String substring(size_t offset, size_t length = SIZE_MAX) const
 			{
 				length = min(length, size() - offset);
 
@@ -1107,7 +1147,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = min(right_index, size()) - left_index + 1
 			 *  @note  Memory: O(n), n = min(right_index, size()) - left_index + 1
 			 */
-			String between(size_t left_index, size_t right_index = SIZE_MAX)
+			String between(size_t left_index, size_t right_index = SIZE_MAX) const
 			{
 				right_index = min(right_index, size());
 				size_t length = right_index - left_index + 1;
@@ -1130,7 +1170,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = size()
 			 */
-			DynamicArray<String> split(char delimiter)
+			DynamicArray<String> split(char delimiter) const
 			{
 				DynamicArray<size_t> found_indices = indices_of(delimiter);
 
@@ -1163,7 +1203,7 @@ namespace flow {
 			 *  @note  Memory: O(n), n = size()
 			 */
 			template <size_t char_count>
-			DynamicArray<String> split(const char (&delimiter)[char_count])
+			DynamicArray<String> split(const char (&delimiter)[char_count]) const
 			{
 				DynamicArray<size_t> found_indices = indices_of(delimiter);
 
@@ -1195,7 +1235,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = size()
 			 */
-			DynamicArray<String> split(String delimiter)
+			DynamicArray<String> split(String delimiter) const
 			{
 				DynamicArray<size_t> found_indices = indices_of(delimiter);
 
@@ -1871,17 +1911,36 @@ namespace flow {
 				putc('\n', stream);
 			}
 
-			static String from_num(uint8_t num)  { return String::format("%hhu",  num); }
-			static String from_num(int8_t num)   { return String::format("%hhd",  num); }
+			static String from_num(uint8_t  num) { return String::format("%hhu",  num); }
+			static String from_num(int8_t   num) { return String::format("%hhd",  num); }
 			static String from_num(uint16_t num) { return String::format("%hu",   num); }
-			static String from_num(int16_t num)  { return String::format("%hd",   num); }
+			static String from_num(int16_t  num) { return String::format("%hd",   num); }
 			static String from_num(uint32_t num) { return String::format("%lu",   num); }
-			static String from_num(int32_t num)  { return String::format("%ld",   num); }
+			static String from_num(int32_t  num) { return String::format("%ld",   num); }
 			static String from_num(uint64_t num) { return String::format("%llu",  num); }
-			static String from_num(int64_t num)  { return String::format("%lld",  num); }
-			static String from_num(float num)    { return String::format("%.6f",  num); }
-			static String from_num(double num)   { return String::format("%.15f", num); }
+			static String from_num(int64_t  num) { return String::format("%lld",  num); }
+			static String from_num(float    num) { return String::format("%.6f",  num); }
+			static String from_num(double   num) { return String::format("%.15f", num); }
 	};
 };
+
+/**
+ *  @brief  Calculates the hash of a String, used for hash maps etc.
+ */
+template <>
+struct std::hash<flow::String> {
+	size_t operator()(const flow::String& str) const
+	{
+		size_t hash = 256203221;
+
+		for (size_t i = 0, j = 0; i < str.size(); i++, j++, j %= 4) {
+			hash ^= str.get_at_index(i) << (j * 8);
+			hash *= 198491317;
+		}
+
+		return hash;
+	}
+};
+
 
 #endif
