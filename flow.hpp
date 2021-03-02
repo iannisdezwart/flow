@@ -11,5 +11,7 @@
 #include "debug/timer.hpp"
 #include "maths/vector.hpp"
 #include "maths/matrix.hpp"
+#include "http/http-server.hpp"
+#include "http/http-message.hpp"
 
 #endif
