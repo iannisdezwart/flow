@@ -1,9 +1,7 @@
 #ifndef FLOW_DYNAMIC_ARRAY_HEADER
 #define FLOW_DYNAMIC_ARRAY_HEADER
 
-#include <bits/stdc++.h>
-
-using namespace std;
+#include "buffer.hpp"
 
 namespace flow {
 	namespace DynamicArrayErrors {
@@ -30,12 +28,12 @@ namespace flow {
 			}
 
 			void reassign(
-				initializer_list<type> values,
+				std::initializer_list<type> values,
 				size_t minimum_starting_size = 0
 			)
 			{
 				size_t nearest_power_of_2 = pow(2, ceil(log2(current_element_count)));
-				resize_buffer(max({ 16UL, nearest_power_of_2, minimum_starting_size }));
+				resize_buffer(std::max({ 16UL, nearest_power_of_2, minimum_starting_size }));
 
 				current_element_count = values.size();
 
@@ -93,7 +91,7 @@ namespace flow {
 			 * initially allocate. Can be left empty for automatic size assignment.
 			 */
 			DynamicArray(
-				initializer_list<type> initial_values,
+				std::initializer_list<type> initial_values,
 				size_t minimum_starting_size = 0
 			)
 			{
@@ -119,7 +117,7 @@ namespace flow {
 			 *  @brief  Reassigns the array with new values.
 			 *  @param  new_values  A brace enclosed list containing the new values.
 			 */
-			void operator=(initializer_list<type> new_values)
+			void operator=(std::initializer_list<type> new_values)
 			{
 				reassign(new_values);
 			}
@@ -511,8 +509,8 @@ namespace flow {
 				size_t length = SIZE_MAX
 			)
 			{
-				size_t i = min(current_buffer_size, current_buffer_size - offset);
-				i = min(i, starting_index + length);
+				size_t i = std::min(current_buffer_size, current_buffer_size - offset);
+				i = std::min(i, starting_index + length);
 
 				while (i > starting_index) {
 					buffer[i - 1 + offset] = buffer[i - 1];
@@ -541,7 +539,7 @@ namespace flow {
 			)
 			{
 				size_t i = starting_index - offset;
-				size_t upper_bound = min(size() - offset, starting_index + length);
+				size_t upper_bound = std::min(size() - offset, starting_index + length);
 
 				while (i < upper_bound) {
 					buffer[i] = buffer[i + offset];

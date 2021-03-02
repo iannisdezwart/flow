@@ -1,10 +1,6 @@
 #ifndef FLOW_STRING_TOOLS_HEADER
 #define FLOW_STRING_TOOLS_HEADER
 
-#include <bits/stdc++.h>
-
-using namespace std;
-
 namespace flow_tools {
 	template <char starting_alphabetical_digit = 'A'>
 	char get_base_digit(uint8_t num) {
@@ -200,8 +196,8 @@ namespace flow_tools {
 	size_t write_float_to_str(float_t num, char *buf, uint8_t fraction_digits,
 		char pad_char = '\0', size_t pad_size = 0)
 	{
-		if (isnan(num)) return copy_str("NaN", buf);
-		if (isinf(num)) return copy_str("Inf", buf);
+		if (std::isnan(num)) return copy_str("NaN", buf);
+		if (std::isinf(num)) return copy_str("Inf", buf);
 
 		size_t length = 0;
 
@@ -212,7 +208,7 @@ namespace flow_tools {
 		}
 
 		float_t n = num;
-		int exp = max(floor(log10(num)), (float_t) 0);
+		int exp = std::max(floor(log10(num)), (float_t) 0);
 		int e = exp;
 		uint8_t rounding_digit;
 		double digit_place;

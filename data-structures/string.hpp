@@ -1,12 +1,8 @@
 #ifndef FLOW_STRING_HEADER
 #define FLOW_STRING_HEADER
 
-#include <bits/stdc++.h>
-
 #include "dynamic-array.hpp"
 #include "string-tools.hpp"
-
-using namespace std;
 
 namespace flow {
 	/**
@@ -1219,7 +1215,7 @@ namespace flow {
 			 */
 			String substring(size_t offset, size_t length = SIZE_MAX) const
 			{
-				length = min(length, size() - offset);
+				length = std::min(length, size() - offset);
 
 				String str(length);
 				str.unsafe_increment_element_count(length);
@@ -1243,7 +1239,7 @@ namespace flow {
 			 */
 			String between(size_t left_index, size_t right_index = SIZE_MAX) const
 			{
-				right_index = min(right_index, size());
+				right_index = std::min(right_index, size());
 
 				if (left_index > right_index) {
 					return String(0UL);
@@ -1528,7 +1524,7 @@ namespace flow {
 										break;
 								}
 
-								size += max(num_size, pad_size);
+								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
 							case 'u':
@@ -1562,7 +1558,7 @@ namespace flow {
 										break;
 								}
 
-								size += max(num_size, pad_size);
+								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
 							case 'o':
@@ -1596,7 +1592,7 @@ namespace flow {
 										break;
 								}
 
-								size += max(num_size, pad_size);
+								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
 							case 'x':
@@ -1631,7 +1627,7 @@ namespace flow {
 										break;
 								}
 
-								size += max(num_size, pad_size);
+								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
 							case 'f':
@@ -1644,7 +1640,7 @@ namespace flow {
 									case SIZE_64:
 									{
 										double num = va_arg(args, double);
-										num_size = max(log10(abs(num)) + 1, 1.0) + 1;
+										num_size = std::max(log10(abs(num)) + 1, 1.0) + 1;
 										break;
 									}
 								}
@@ -1652,7 +1648,7 @@ namespace flow {
 								// Fraction digits
 
 								if (precision) num_size += precision + 1; // '.' character
-								size += max(num_size, pad_size);
+								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
 							case 's':

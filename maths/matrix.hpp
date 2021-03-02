@@ -1,10 +1,7 @@
 #ifndef FLOW_MATRIX_HEADER
 #define FLOW_MATRIX_HEADER
 
-#include <bits/stdc++.h>
 #include "vector.hpp"
-
-using namespace std;
 
 namespace flow {
 	template <size_t size_y, size_t size_x, typename num_t = double>
@@ -18,7 +15,7 @@ namespace flow {
 			 *  @brief  Initialises this Matrix with an initializer_list like:
 			 *  { { 1, 2 }, { 3, 4 } }
 			 */
-			Matrix(initializer_list<initializer_list<num_t>> init)
+			Matrix(std::initializer_list<std::initializer_list<num_t>> init)
 			{
 				size_t y = 0;
 

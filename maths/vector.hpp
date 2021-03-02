@@ -1,10 +1,6 @@
 #ifndef FLOW_VECTOR_HEADER
 #define FLOW_VECTOR_HEADER
 
-#include <bits/stdc++.h>
-
-using namespace std;
-
 namespace flow {
 	template <size_t size, typename num_t = double>
 	class Vector {
@@ -17,7 +13,7 @@ namespace flow {
 			 *  @brief  Initialises this Vector with an initializer_list like:
 			 *  { 1, 2, 3 }
 			 */
-			Vector(initializer_list<num_t> init)
+			Vector(std::initializer_list<num_t> init)
 			{
 				size_t i = 0;
 

@@ -1,18 +1,15 @@
 #ifndef EVENT_EMITTER_HEADER
 #define EVENT_EMITTER_HEADER
 
-#include <bits/stdc++.h>
-#include "../flow.hpp"
-
-using namespace std;
-using namespace flow;
+#include "../data-structures/dynamic-array.hpp"
+#include "../data-structures/string.hpp"
 
 namespace flow {
 	typedef size_t event_id_t;
 
 	template <typename... Args>
 	struct EventListener {
-		function<void(Args...)> callback;
+		std::function<void(Args...)> callback;
 		event_id_t id;
 		bool recurrent;
 	};
@@ -35,7 +32,7 @@ namespace flow {
 			 *  @returns  The id of this listener. You will need to pass this to
 			 *  EventEmitter::remove_listener() if you wish to delete the listener.
 			 */
-			event_id_t add_listener(function<void(Args...)> callback,
+			event_id_t add_listener(std::function<void(Args...)> callback,
 				bool recurrent = true)
 			{
 				event_id_t id = current_id++;

@@ -1,11 +1,8 @@
 #ifndef FLOW_HTTP_RESPONSE_HEADER
 #define FLOW_HTTP_RESPONSE_HEADER
 
-#include <bits/stdc++.h>
-
 #include "../data-structures/string.hpp"
-
-using namespace std;
+#include "../data-structures/string-delimiter.hpp"
 
 namespace flow_http_tools {
 	using namespace flow;
@@ -198,7 +195,7 @@ namespace flow_http_tools {
 	class HTTPMessage {
 		public:
 			String start_line;
-			unordered_map<String, String> headers;
+			std::unordered_map<String, String> headers;
 			String body;
 
 			HTTPMessage(const String& start_line)
@@ -237,7 +234,7 @@ namespace flow_http_tools {
 			{
 				size_t size = 0;
 
-				for (pair<const String&, const String&> entry : headers) {
+				for (std::pair<const String&, const String&> entry : headers) {
 					const String& key = entry.first;
 					const String& value = entry.second;
 
@@ -246,7 +243,7 @@ namespace flow_http_tools {
 
 				String headers_str(size);
 
-				for (pair<const String&, const String&> entry : headers) {
+				for (std::pair<const String&, const String&> entry : headers) {
 					const String& key = entry.first;
 					const String& value = entry.second;
 
