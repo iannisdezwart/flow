@@ -144,11 +144,11 @@ namespace flow {
 			 */
 			void reset(size_t starting_size = 16)
 			{
+				current_buffer_size = starting_size;
 				type *new_buffer = allocate_buffer();
 				if (buffer != NULL) delete[] buffer;
 
 				current_element_count = 0;
-				current_buffer_size = starting_size;
 				buffer = new_buffer;
 			}
 

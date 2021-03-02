@@ -53,7 +53,7 @@ namespace flow {
 			 *  @brief  Copies the values of other_buffer to this buffer.
 			 *  @param  other_buffer  A reference to the buffer to copy from.
 			 */
-			void copy_from(Buffer<type>& other_buffer)
+			void copy_from(const Buffer<type>& other_buffer)
 			{
 				size_t copy_size = sizeof(type) * other_buffer.size();
 				memcpy(begin(), other_buffer.begin(), copy_size);
