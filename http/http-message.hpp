@@ -9,7 +9,7 @@ namespace flow_http_tools {
 
 	constexpr const char *HTTP_VERSION = "HTTP/1.1";
 
-	enum HTTPMethods {
+	enum class HTTPMethods {
 		UNDEF = -1,
 		GET,
 		HEAD,
@@ -26,33 +26,33 @@ namespace flow_http_tools {
 	{
 		switch (method) {
 			default:
-			case GET: return "GET";
-			case HEAD: return "HEAD";
-			case POST: return "POST";
-			case PUT: return "PUT";
-			case DELETE: return "DELETE";
-			case CONNECT: return "CONNECT";
-			case OPTIONS: return "OPTIONS";
-			case TRACE: return "TRACE";
-			case PATCH: return "PATCH";
+			case HTTPMethods::GET: return "GET";
+			case HTTPMethods::HEAD: return "HEAD";
+			case HTTPMethods::POST: return "POST";
+			case HTTPMethods::PUT: return "PUT";
+			case HTTPMethods::DELETE: return "DELETE";
+			case HTTPMethods::CONNECT: return "CONNECT";
+			case HTTPMethods::OPTIONS: return "OPTIONS";
+			case HTTPMethods::TRACE: return "TRACE";
+			case HTTPMethods::PATCH: return "PATCH";
 		}
 	}
 
 	enum HTTPMethods str_to_method(const String& str)
 	{
-		if (str == "GET") return GET;
-		if (str == "HEAD") return HEAD;
-		if (str == "POST") return POST;
-		if (str == "PUT") return PUT;
-		if (str == "DELETE") return DELETE;
-		if (str == "CONNECT") return CONNECT;
-		if (str == "OPTIONS") return OPTIONS;
-		if (str == "TRACE") return TRACE;
-		if (str == "PATCH") return PATCH;
-		return UNDEF;
+		if (str == "GET") return HTTPMethods::GET;
+		if (str == "HEAD") return HTTPMethods::HEAD;
+		if (str == "POST") return HTTPMethods::POST;
+		if (str == "PUT") return HTTPMethods::PUT;
+		if (str == "DELETE") return HTTPMethods::DELETE;
+		if (str == "CONNECT") return HTTPMethods::CONNECT;
+		if (str == "OPTIONS") return HTTPMethods::OPTIONS;
+		if (str == "TRACE") return HTTPMethods::TRACE;
+		if (str == "PATCH") return HTTPMethods::PATCH;
+		return HTTPMethods::UNDEF;
 	}
 
-	enum HTTPStatusCodes {
+	enum class HTTPStatusCodes {
 		CONTINUE = 100,
 		SWITCHING_PROTOCOL = 101,
 		PROCESSING = 102,
@@ -123,72 +123,72 @@ namespace flow_http_tools {
 	const char *to_string(enum HTTPStatusCodes status_code)
 	{
 		switch (status_code) {
-			case CONTINUE: return "100 Continue";
-			case SWITCHING_PROTOCOL: return "101 Switching Protocol";
-			case PROCESSING: return "102 Processing";
-			case EARLY_HINTS: return "103 Early Hints";
+			case HTTPStatusCodes::CONTINUE: return "100 Continue";
+			case HTTPStatusCodes::SWITCHING_PROTOCOL: return "101 Switching Protocol";
+			case HTTPStatusCodes::PROCESSING: return "102 Processing";
+			case HTTPStatusCodes::EARLY_HINTS: return "103 Early Hints";
 
 			default:
-			case OK: return "200 OK";
-			case CREATED: return "201 Created";
-			case ACCEPTED: return "202 Accepted";
-			case NON_AUTHORITATIVE_INFORMATION: return "203 Non-Authoritative Information";
-			case NO_CONTENT: return "204 No Content";
-			case RESET_CONTENT: return "205 Reset Content";
-			case PARTIAL_CONTENT: return "206 Partial Content";
-			case MULTI_STATUS: return "207 Multi-Status";
-			case ALREADY_REPORTED: return "208 Already Reported";
-			case IM_USED: return "226 IM Used";
+			case HTTPStatusCodes::OK: return "200 OK";
+			case HTTPStatusCodes::CREATED: return "201 Created";
+			case HTTPStatusCodes::ACCEPTED: return "202 Accepted";
+			case HTTPStatusCodes::NON_AUTHORITATIVE_INFORMATION: return "203 Non-Authoritative Information";
+			case HTTPStatusCodes::NO_CONTENT: return "204 No Content";
+			case HTTPStatusCodes::RESET_CONTENT: return "205 Reset Content";
+			case HTTPStatusCodes::PARTIAL_CONTENT: return "206 Partial Content";
+			case HTTPStatusCodes::MULTI_STATUS: return "207 Multi-Status";
+			case HTTPStatusCodes::ALREADY_REPORTED: return "208 Already Reported";
+			case HTTPStatusCodes::IM_USED: return "226 IM Used";
 
-			case MULTIPLE_CHOICE: return "300 Multiple Choice";
-			case MOVED_PERMANENTLY: return "301 Moved Permanently";
-			case FOUND: return "302 Found";
-			case SEE_OTHER: return "303 See Other";
-			case NOT_MODIFIED: return "304 Not Modified";
-			case TEMPORARY_REDIRECT: return "307 Temporary Redirect";
-			case PERMANENT_REDIRECT: return "308 Permanent Redirect";
+			case HTTPStatusCodes::MULTIPLE_CHOICE: return "300 Multiple Choice";
+			case HTTPStatusCodes::MOVED_PERMANENTLY: return "301 Moved Permanently";
+			case HTTPStatusCodes::FOUND: return "302 Found";
+			case HTTPStatusCodes::SEE_OTHER: return "303 See Other";
+			case HTTPStatusCodes::NOT_MODIFIED: return "304 Not Modified";
+			case HTTPStatusCodes::TEMPORARY_REDIRECT: return "307 Temporary Redirect";
+			case HTTPStatusCodes::PERMANENT_REDIRECT: return "308 Permanent Redirect";
 
-			case BAD_REQUEST: return "400 Bad Request";
-			case UNAUTHORIZED: return "401 Unauthorized";
-			case PAYMENT_REQUIRED: return "402 Payment Required";
-			case FORBIDDEN: return "403 Forbidden";
-			case NOT_FOUND: return "404 Not Found";
-			case METHOD_NOT_ALLOWED: return "405 Method Not Allowed";
-			case NOT_ACCEPTABLE: return "406 Not Acceptable";
-			case PROXY_AUTHENTICATION_REQUIRED: return "407: Proxy Authentication Required";
-			case REQUEST_TIMEOUT: return "408 Request Timeout";
-			case CONFLICT: return "409 Conflict";
-			case GONE: return "410 Gone";
-			case LENGTH_REQUIRED: return "411 Length Required";
-			case PRECONDITION_FAILED: return "412 Precondition Failed";
-			case PAYLOAD_TOO_LARGE: return "413 Payload Too Large";
-			case URI_TOO_LONG: return "414 URI Too Long";
-			case UNSUPPORTED_MEDIA_TYPE: return "415 Unsupported Media Type";
-			case RANGE_NOT_SATISFIABLE: return "416 Range Not Satisfiable";
-			case EXPECTATION_FAILED: return "417 Expectation Failed";
-			case IM_A_TEAPOT: return "418 I'm a teapot"; // Not capitalised in standard
-			case MISDIRECTED_REQUEST: return "421 Misdirected Request";
-			case UNPROCESSABLE_ENTITY: return "422 Unprocessable Entity";
-			case LOCKED: return "423 Locked";
-			case FAILED_DEPENDENCY: return "424 Failed Dependency";
-			case TOO_EARLY: return "425 Too Early";
-			case UPGRADE_REQUIRED: return "426 Upgrade Required";
-			case PRECONDITION_REQUIRED: return "428 Precondition Required";
-			case TOO_MANY_REQUESTS: return "429 Too Many Requests";
-			case REQUEST_HEADER_FIELDS_TOO_LARGE: return "431 Request Header Fields Too Large";
-			case UNAVAILABLE_FOR_LEGAL_REASONS: return "451 Unavailable For Legal Reasons";
+			case HTTPStatusCodes::BAD_REQUEST: return "400 Bad Request";
+			case HTTPStatusCodes::UNAUTHORIZED: return "401 Unauthorized";
+			case HTTPStatusCodes::PAYMENT_REQUIRED: return "402 Payment Required";
+			case HTTPStatusCodes::FORBIDDEN: return "403 Forbidden";
+			case HTTPStatusCodes::NOT_FOUND: return "404 Not Found";
+			case HTTPStatusCodes::METHOD_NOT_ALLOWED: return "405 Method Not Allowed";
+			case HTTPStatusCodes::NOT_ACCEPTABLE: return "406 Not Acceptable";
+			case HTTPStatusCodes::PROXY_AUTHENTICATION_REQUIRED: return "407: Proxy Authentication Required";
+			case HTTPStatusCodes::REQUEST_TIMEOUT: return "408 Request Timeout";
+			case HTTPStatusCodes::CONFLICT: return "409 Conflict";
+			case HTTPStatusCodes::GONE: return "410 Gone";
+			case HTTPStatusCodes::LENGTH_REQUIRED: return "411 Length Required";
+			case HTTPStatusCodes::PRECONDITION_FAILED: return "412 Precondition Failed";
+			case HTTPStatusCodes::PAYLOAD_TOO_LARGE: return "413 Payload Too Large";
+			case HTTPStatusCodes::URI_TOO_LONG: return "414 URI Too Long";
+			case HTTPStatusCodes::UNSUPPORTED_MEDIA_TYPE: return "415 Unsupported Media Type";
+			case HTTPStatusCodes::RANGE_NOT_SATISFIABLE: return "416 Range Not Satisfiable";
+			case HTTPStatusCodes::EXPECTATION_FAILED: return "417 Expectation Failed";
+			case HTTPStatusCodes::IM_A_TEAPOT: return "418 I'm a teapot"; // Not capitalised in standard
+			case HTTPStatusCodes::MISDIRECTED_REQUEST: return "421 Misdirected Request";
+			case HTTPStatusCodes::UNPROCESSABLE_ENTITY: return "422 Unprocessable Entity";
+			case HTTPStatusCodes::LOCKED: return "423 Locked";
+			case HTTPStatusCodes::FAILED_DEPENDENCY: return "424 Failed Dependency";
+			case HTTPStatusCodes::TOO_EARLY: return "425 Too Early";
+			case HTTPStatusCodes::UPGRADE_REQUIRED: return "426 Upgrade Required";
+			case HTTPStatusCodes::PRECONDITION_REQUIRED: return "428 Precondition Required";
+			case HTTPStatusCodes::TOO_MANY_REQUESTS: return "429 Too Many Requests";
+			case HTTPStatusCodes::REQUEST_HEADER_FIELDS_TOO_LARGE: return "431 Request Header Fields Too Large";
+			case HTTPStatusCodes::UNAVAILABLE_FOR_LEGAL_REASONS: return "451 Unavailable For Legal Reasons";
 
-			case INTERNAL_SERVER_ERROR: return "500 Internal Server Error";
-			case NOT_IMPLEMENTED: return "501 Not Implemented";
-			case BAD_GATEWAY: return "502 Bad Gateway";
-			case SERVICE_UNAVAILABLE: return "503 Service Unavailable";
-			case GATEWAY_TIMEOUT: return "504 Gateway Timeout";
-			case HTTP_VERSION_NOT_SUPPORTED: return "505 HTTP Version Not Supported";
-			case VARIANT_ALSO_NEGOTIATES: return "506 Variant Also Negotiates";
-			case INSUFFICIENT_STORAGE: return "507 Insufficient Storage";
-			case LOOP_DETECTED: return "508 Loop Detected";
-			case NOT_EXTENDED: return "509 Not Extended";
-			case NETWORK_AUTHENTICATION_REQUIRED: return "511 Network Authentication Required";
+			case HTTPStatusCodes::INTERNAL_SERVER_ERROR: return "500 Internal Server Error";
+			case HTTPStatusCodes::NOT_IMPLEMENTED: return "501 Not Implemented";
+			case HTTPStatusCodes::BAD_GATEWAY: return "502 Bad Gateway";
+			case HTTPStatusCodes::SERVICE_UNAVAILABLE: return "503 Service Unavailable";
+			case HTTPStatusCodes::GATEWAY_TIMEOUT: return "504 Gateway Timeout";
+			case HTTPStatusCodes::HTTP_VERSION_NOT_SUPPORTED: return "505 HTTP Version Not Supported";
+			case HTTPStatusCodes::VARIANT_ALSO_NEGOTIATES: return "506 Variant Also Negotiates";
+			case HTTPStatusCodes::INSUFFICIENT_STORAGE: return "507 Insufficient Storage";
+			case HTTPStatusCodes::LOOP_DETECTED: return "508 Loop Detected";
+			case HTTPStatusCodes::NOT_EXTENDED: return "509 Not Extended";
+			case HTTPStatusCodes::NETWORK_AUTHENTICATION_REQUIRED: return "511 Network Authentication Required";
 		}
 	}
 
