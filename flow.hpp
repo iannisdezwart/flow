@@ -5,6 +5,7 @@
 #include "data-structures/buffer.hpp"
 #include "data-structures/dynamic-array.hpp"
 #include "data-structures/string.hpp"
+#include "data-structures/string-delimiter.hpp"
 #include "events/event_emitter.hpp"
 #include "formatting/ansi.hpp"
 #include "debug/timer.hpp"

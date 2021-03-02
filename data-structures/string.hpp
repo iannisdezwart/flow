@@ -33,6 +33,19 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Creates a String from a char pointer.
+			 */
+			String(const char *chars) : DynamicArray<char>(strlen(chars))
+			{
+				size_t len = strlen(chars);
+				unsafe_increment_element_count(len);
+
+				for (size_t i = 0; i < len; i++) {
+					set_at_index(i, chars[i]);
+				}
+			}
+
+			/**
 			 *  @brief  Deletes the current value of this String and copies a new
 			 *  character array to this String.
 			 *  @param  new_value  New character array to copy to this String.
@@ -55,7 +68,7 @@ namespace flow {
 			 *  String to this String.
 			 *  @param  new_value  New String to copy to this String.
 			 */
-			void operator=(String& new_value)
+			void operator=(const String& new_value)
 			{
 				size_t new_size = new_value.size();
 
@@ -151,7 +164,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size() + str.size()
 			 *  @note  Memory: O(1)
 			 */
-			void attach(String& str)
+			void attach(const String& str)
 			{
 				// Allocate space for all new characters
 
@@ -186,7 +199,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size() + str.size()
 			 *  @note  Memory: O(1)
 			 */
-			void operator+=(String& str) { attach(str); }
+			void operator+=(const String& str) { attach(str); }
 
 			/**
 			 *  @brief  Alter this String by repeats it a certain amount of times.
@@ -259,6 +272,47 @@ namespace flow {
 			String operator+(String& other_string) const
 			{
 				return concatenate(other_string);
+			}
+
+			/**
+			 *  @brief  Concatenates this String and a sequence of characters into
+			 *  one new String and returns it.
+			 *  @param  chars  The characters that are appended to this String.
+			 *  @note  Runtime: O(n + m), n = size(), m = other_string.size()
+			 *  @note  Memory: O(n + m)
+			 */
+			template <size_t char_count>
+			String concatenate(const char (&chars)[char_count]) const
+			{
+				size_t new_string_size = size() + char_count - 1;
+				String new_string(new_string_size);
+
+				// Push the first String
+
+				for (size_t i = 0; i < size(); i++) {
+					new_string.append(get_at_index(i));
+				}
+
+				// Push the second String
+
+				for (size_t i = 0; i < char_count - 1; i++) {
+					new_string.append(chars[i]);
+				}
+
+				return new_string;
+			}
+
+			/**
+			 *  @brief  Concatenates this String and a sequence of characters into
+			 *  one new String and returns it.
+			 *  @param  chars  The characters that are appended to this String.
+			 *  @note  Runtime: O(n + m), n = size(), m = other_string.size()
+			 *  @note  Memory: O(n + m)
+			 */
+			template <size_t char_count>
+			String operator+(const char (&chars)[char_count]) const
+			{
+				return concatenate(chars);
 			}
 
 			/**
@@ -366,6 +420,46 @@ namespace flow {
 
 				for (size_t i = 0; i < other_string.size(); i++) {
 					if (other_string.get_at_index(i) != get_at_index(i))
+						return false;
+				}
+
+				return true;
+			}
+
+			/**
+			 *  @brief  Checks whether a certain character sequence occurs at a
+			 *  given index in this String.
+			 *  @param  chars  The characters to find in this String.
+			 *  @param  index  The index to find the characters at in this String.
+			 *  @note  Runtime: O(n), n = char_count (early returns false)
+			 *  @note  Memory: O(1)
+			 */
+			template <size_t char_count>
+			bool substring_occurs_at(const char (&chars)[char_count], size_t index) const
+			{
+				if (index + char_count - 1 > size()) return false;
+
+				for (size_t i = 0; i < char_count - 1; i++) {
+					if (chars[i] != get_at_index(index + i)) return false;
+				}
+
+				return true;
+			}
+
+			/**
+			 *  @brief  Checks whether a certain substring occurs at a given index in
+			 *  this String.
+			 *  @param  substring  The substring to find in this String.
+			 *  @param  index  The index to find the substring at in this String.
+			 *  @note  Runtime: O(n), n = substring.size() (early returns false)
+			 *  @note  Memory: O(1)
+			 */
+			bool substring_occurs_at(const String& substring, size_t index = 0) const
+			{
+				if (index + substring.size() > size()) return false;
+
+				for (size_t i = 0; i < substring.size(); i++) {
+					if (substring.get_at_index(i) != get_at_index(index + i))
 						return false;
 				}
 
@@ -1150,6 +1244,11 @@ namespace flow {
 			String between(size_t left_index, size_t right_index = SIZE_MAX) const
 			{
 				right_index = min(right_index, size());
+
+				if (left_index > right_index) {
+					return String(0UL);
+				}
+
 				size_t length = right_index - left_index + 1;
 
 				String str(length);
@@ -1257,6 +1356,76 @@ namespace flow {
 				}
 
 				return strings;
+			}
+
+			/**
+			 *  @brief  Returns a new String that starts at a given index and ends
+			 *  at the index of the next position of a given delimiter.
+			 *  If the delimiter is not found, the rest of the String is returned.
+			 *  @param  delimiter  The character to bound the returned String on.
+			 *  @param  index  The starting index of the returned String.
+			 *  @note  Runtime: O(n), n = delim_index - index
+			 *  @note  Memory: O(n), n = delim_index - index
+			 */
+			String delimit(char delimiter, size_t index = 0) const
+			{
+				size_t right_index = size() - 1;
+
+				for (size_t i = index; i < size() - 1; i++) {
+					if (get_at_index(i) == delimiter) {
+						right_index = i - 1;
+						break;
+					}
+				}
+
+				return between(index, right_index);
+			}
+
+			/**
+			 *  @brief  Returns a new String that starts at a given index and ends
+			 *  at the index of the next position of a given delimiter.
+			 *  If the delimiter is not found, the rest of the String is returned.
+			 *  @param  delimiter  The character sequence to bound the returned String on.
+			 *  @param  index  The starting index of the returned String.
+			 *  @note  Runtime: O(n), n = delim_index - index
+			 *  @note  Memory: O(n), n = delim_index - index
+			 */
+			template <size_t delimeter_len>
+			String delimit(const char (&delimiter)[delimeter_len], size_t index = 0) const
+			{
+				size_t right_index = size() - 1;
+
+				for (size_t i = index; i < size() - 1; i++) {
+					if (substring_occurs_at(delimiter, i)) {
+						right_index = i - 1;
+						break;
+					}
+				}
+
+				return between(index, right_index);
+			}
+
+			/**
+			 *  @brief  Returns a new String that starts at a given index and ends
+			 *  at the index of the next position of a given delimiter.
+			 *  If the delimiter is not found, the rest of the String is returned.
+			 *  @param  delimiter  The String to bound the returned String on.
+			 *  @param  index  The starting index of the returned String.
+			 *  @note  Runtime: O(n), n = delim_index - index
+			 *  @note  Memory: O(n), n = delim_index - index
+			 */
+			String delimit(const String& delimiter, size_t index = 0) const
+			{
+				size_t right_index = size() - 1;
+
+				for (size_t i = index; i < size() - 1; i++) {
+					if (substring_occurs_at(delimiter, i)) {
+						right_index = i - 1;
+						break;
+					}
+				}
+
+				return between(index, right_index);
 			}
 
 			/**
@@ -1932,6 +2101,8 @@ struct std::hash<flow::String> {
 	size_t operator()(const flow::String& str) const
 	{
 		size_t hash = 256203221;
+
+		// Todo: check if there is a faster way to do the modular operation
 
 		for (size_t i = 0, j = 0; i < str.size(); i++, j++, j %= 4) {
 			hash ^= str.get_at_index(i) << (j * 8);
