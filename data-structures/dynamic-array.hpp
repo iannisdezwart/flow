@@ -598,7 +598,7 @@ namespace flow {
 			 */
 			void rotate_left(size_t offset)
 			{
-				offset %= size;
+				offset %= size();
 				if (offset == 0) return;
 
 				size_t first = 0;
