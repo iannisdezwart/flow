@@ -83,6 +83,16 @@ namespace flow {
 					}
 				}
 			}
+
+			/**
+			 *  @brief  Alias for Stream::write_event::add_listener().
+			 *  @param  callback  This function will be executed when the Stream
+			 *  receives new data.
+			 */
+			void on_data(std::function<void(type)> callback)
+			{
+				write_event.add_listener(callback);
+			}
 	};
 };
 
