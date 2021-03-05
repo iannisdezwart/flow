@@ -2086,6 +2086,19 @@ namespace flow {
 			static String from_num(int64_t  num) { return String::format("%lld",  num); }
 			static String from_num(float    num) { return String::format("%.6f",  num); }
 			static String from_num(double   num) { return String::format("%.15f", num); }
+
+			/**
+			 *  @brief  Allocates a String with a buffer of a certain size.
+			 *  The element count will be set to the certain size.
+			 *  Watch out for undefined behaviour.
+			 *  @param  size  The size of the String buffer.
+			 */
+			static String alloc(size_t size)
+			{
+				String str(size);
+				str.unsafe_increment_element_count(size);
+				return str;
+			}
 	};
 };
 
