@@ -254,23 +254,23 @@ namespace flow_http_tools {
 			}
 	};
 
-	class HTTPRequestMessage : public HTTPMessage {
+	class HTTPRequest : public HTTPMessage {
 		public:
 			enum HTTPMethods method;
 			String path;
 
-			HTTPRequestMessage(enum HTTPMethods method, const String& path)
+			HTTPRequest(enum HTTPMethods method, const String& path)
 				: method(method), path(path), HTTPMessage(
 					String::format("%s %S %s", to_string(method), path, HTTP_VERSION)
 				) {}
 
 			template <size_t path_len>
-			HTTPRequestMessage(enum HTTPMethods method, const char (&path)[path_len])
+			HTTPRequest(enum HTTPMethods method, const char (&path)[path_len])
 				: method(method), path(path), HTTPMessage(
 					String::format("%s %S %s", to_string(method), String(path), HTTP_VERSION)
 				) {}
 
-			static HTTPRequestMessage parse(String& req_str)
+			static HTTPRequest parse(String& req_str)
 			{
 				// Convert CRLF to LF
 
@@ -291,7 +291,7 @@ namespace flow_http_tools {
 
 				String http_version = delimiter.delimit('\n');
 
-				HTTPRequestMessage req(method, path);
+				HTTPRequest req(method, path);
 
 				// Read headers
 
@@ -314,11 +314,129 @@ namespace flow_http_tools {
 			}
 	};
 
-	class HTTPResponseMessage : public HTTPMessage {
+	enum class HTTPRequestParserStates {
+		PARSING_FIRST_LINE,
+		PARSING_HEADERS,
+		PARSING_BODY,
+		FINISHED_PARSING
+	};
+
+	enum class HTTPRequestParserErrors {
+		UNKNOWN_METHOD,
+		MALFORMED_HEADER,
+	};
+
+	class HTTPRequestParser {
+		public:
+			Stream<String&> stream;
+			String buffer;
+
+			enum HTTPRequestParserStates state;
+
+			HTTPRequestParser(Stream<String&> stream) : stream(stream)
+			{
+				stream.on_data([this](String& chunk) {
+					// Convert CRLF to LF
+
+					chunk.replace("\r\n", "\n");
+					buffer += chunk;
+
+					switch (state) {
+						case HTTPRequestParserStates::PARSING_FIRST_LINE:
+						{
+							ssize_t newline_index = buffer.first_index_of('\n');
+
+							// If the newline was not found, wait for it
+							// Todo: cap max buffer size
+
+							if (newline_index == -1) return;
+
+							StringDelimiter delimiter(buffer);
+
+							// Read method
+
+							String method_str = delimiter.delimit(' ');
+							enum HTTPMethods method = str_to_method(method_str);
+
+							if (method == HTTPMethods::UNDEF)
+								throw HTTPRequestParserErrors::UNKNOWN_METHOD;
+
+							// Read path
+
+							String path = delimiter.delimit(' ');
+
+							// Expect HTTP protocol version
+
+							String http_version = delimiter.delimit('\n');
+
+							// Todo: check HTTP protocol version
+
+							// Clear buffer
+
+							buffer = buffer.substring(delimiter.offset + 1);
+
+							// Advance to the next state and fall through
+
+							state = HTTPRequestParserStates::PARSING_HEADERS;
+						}
+
+						case HTTPRequestParserStates::PARSING_HEADERS:
+						{
+							ssize_t newline_index = buffer.first_index_of('\n');
+
+							// If a newline was not found, wait for it
+
+							if (newline_index == -1) return;
+
+							StringDelimiter delimiter(buffer);
+
+							// Get the header line
+
+							String header_line = delimiter.delimit('\n');
+
+							if (header_line.size() > 0 && header_line != "\n") {
+								// Parse the header line
+
+								ssize_t colon_index = header_line.first_index_of(':');
+
+								if (colon_index == -1) throw MALFORMED_HEADER;
+
+								// Seperate the key and value
+
+								String header_key = header_line.between(0, colon_index - 1);
+								String header_value = header_line.substring(colon_index + 2);
+
+								String::format("<Header (%lld, %lld)> %S -> %S",
+									header_key.size(), header_value.size(), header_key,
+									header_value).print();
+
+								// Todo: do something with the header
+								// Clear buffer
+
+								buffer = buffer.substring(delimiter.offset + 1);
+								break;
+							} else {
+								// Advance to the next state and fall through
+								// Todo: extract newlines and clear buffer
+
+								state = HTTPRequestParserStates::PARSING_BODY;
+							}
+						}
+
+						case HTTPRequestParserStates::PARSING_BODY:
+						{
+							// Todo: create
+						}
+					}
+				});
+			}
+	};
+
+	class HTTPResponse : public HTTPMessage {
 		public:
 			enum HTTPMethods method;
 
-			HTTPResponseMessage(enum HTTPStatusCodes status_code)
+			HTTPResponse(enum HTTPStatusCodes status_code)
 				: method(method), HTTPMessage(
 					String::format("%s %s", HTTP_VERSION, to_string(status_code))
 				) {}
