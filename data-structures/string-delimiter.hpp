@@ -7,7 +7,7 @@ namespace flow {
 	class StringDelimiter {
 		public:
 			const String& str;
-			size_t i = 0;
+			size_t offset = 0;
 
 			/**
 			 *  @brief  Creates a StringDelimiter instance from a given string.
@@ -22,8 +22,8 @@ namespace flow {
 			 */
 			String delimit(char delimiter)
 			{
-				String token = str.delimit(delimiter, i);
-				i += token.size() + 1;
+				String token = str.delimit(delimiter, offset);
+				offset += token.size() + 1;
 				return token;
 			}
 
@@ -36,8 +36,8 @@ namespace flow {
 			template <size_t delimiter_len>
 			String delimit(const char (&delimiter)[delimiter_len])
 			{
-				String token = str.delimit(delimiter, i);
-				i += token.size() + delimiter_len - 1;
+				String token = str.delimit(delimiter, offset);
+				offset += token.size() + delimiter_len - 1;
 				return token;
 			}
 
@@ -48,8 +48,8 @@ namespace flow {
 			 */
 			String delimit(const String& delimiter)
 			{
-				String token = str.delimit(delimiter, i);
-				i += token.size() + delimiter.size();
+				String token = str.delimit(delimiter, offset);
+				offset += token.size() + delimiter.size();
 				return token;
 			}
 	};
