@@ -163,6 +163,7 @@ namespace flow {
 
 			/**
 			 *  @brief  Returns the index of the first occurrence of a given value.
+			 *  If the value was not found, returns -1.
 			 *  @param  value  The value to find the first index of.
 			 *  @param  starting_index  The index to start searching at.
 			 *  Defaults to 0.
@@ -178,6 +179,7 @@ namespace flow {
 
 			/**
 			 *  @brief  Returns the index of last first occurrence of a given value.
+			 *  If the value was not found, returns -1.
 			 *  @param  value  The value to find the last index of.
 			 *  @param  starting_index  The index to start searching at.
 			 *  Defaults to size() - 1. The algorithm runs in decrementing order.
