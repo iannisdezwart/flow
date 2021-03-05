@@ -3,20 +3,30 @@
 
 #include "../data-structures/string.hpp"
 #include "http-message.hpp"
+#include "../networking/socket.hpp"
+#include "../networking/socket-server.hpp"
 
 namespace flow {
-	namespace net {
-		#include <sys/types.h>
-		#include <sys/socket.h>
-		#include <netinet/in.h>
-		#include <unistd.h>
-
-		constexpr in_addr_t inaddr_any = 0;
-	};
-
 	using namespace flow_http_tools;
 
-	class HTTPServer {
+	class HTTPServer : public SocketServer {
+		public:
+			HTTPServer()
+			{
+				new_socket_event.add_listener([](Socket *socket) {
+					String::format("HTTPServer got a new socket: %d", socket->socket_fd).print();
+
+					socket->in.on_data([socket](String& data) {
+						String::format("Received %lld bytes from socket %d: %S",
+							data.size(), socket->socket_fd, data).print();
+					});
+
+					HTTPRequestParser parser(socket->in);
+				});
+			}
+	};
+
+	class _HTTPServer {
 		private:
 			String read_request(int client_socket_fd)
 			{
@@ -57,14 +67,15 @@ namespace flow {
 
 		public:
 			int socket_fd;
-			int client_socket_fd;
 			uint16_t port;
 			struct net::sockaddr_in server_address;
-			struct net::sockaddr_in client_address;
 
-			HTTPServer()
+			DynamicArray<Socket *> client_sockets;
+
+			_HTTPServer()
 			{
 				socket_fd = net::socket(AF_INET, net::SOCK_STREAM, 0);
+				net::set_nonblocking(socket_fd);
 				if (socket_fd < 0) throw "Error opening socket";
 			}
 
@@ -79,20 +90,36 @@ namespace flow {
 
 				net::listen(socket_fd, 5); // Todo: figure out what the 5 means
 
+				int client_socket_fd;
+
+				struct net::sockaddr_in client_address;
 				net::socklen_t client_address_length = sizeof(client_address);
-				char buf[4096];
 
 				while (true) {
+					net::set_nonblocking(client_socket_fd);
+
 					client_socket_fd = net::accept(socket_fd,
 						(struct net::sockaddr *) &client_address, &client_address_length);
 
-					if (client_socket_fd < 0)
-						printf("accept() error %d\n", client_socket_fd);
+					if (client_socket_fd >= 0) {
+						// Create new socket
 
-					printf("Got new connection: %d\n", client_socket_fd);
+						printf("new socket: %d\n", client_socket_fd);
 
-					String req_str = read_request(client_socket_fd);
-					HTTPRequestMessage req = HTTPRequestMessage::parse(req_str);
+						Socket* socket = new Socket(client_socket_fd, client_address);
+						client_sockets.append(socket);
+
+						// String req_str = read_request(client_socket_fd);
+						// HTTPRequestMessage req = HTTPRequestMessage::parse(req_str);
+					} else if (errno != EWOULDBLOCK) {
+						printf("accept() error %d, errno = %d\n", client_socket_fd, errno);
+					}
+
+					// Handle IO on sockets
+
+					for (size_t i = 0; i < client_sockets.size(); i++) {
+						client_sockets[i]->handle_io();
+					}
 				}
 			}
 	};
