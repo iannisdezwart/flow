@@ -346,6 +346,17 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Directly sets the private property current_element_count
+			 *  to a certain amount. ONLY USE this if you know what you are doing!!!
+			 *  @param  number_of_elements  To what you want to set
+			 *  current_element_count.
+			 */
+			void unsafe_set_element_count(size_t number_of_elements)
+			{
+				current_element_count = number_of_elements;
+			}
+
+			/**
 			 *  @brief  WARNING: Does not check for buffer overflows AND does not
 			 *  increment the number of elements!!! ALWAYS USE
 			 *  DynamicArray::unsafe_increment_element_count() after calling this
