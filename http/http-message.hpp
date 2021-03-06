@@ -3,6 +3,8 @@
 
 #include "../data-structures/string.hpp"
 #include "../data-structures/string-delimiter.hpp"
+#include "../data-structures/stream.hpp"
+#include "../networking/socket.hpp"
 
 namespace flow_http_tools {
 	using namespace flow;
@@ -198,6 +200,8 @@ namespace flow_http_tools {
 			std::unordered_map<String, String> headers;
 			String body;
 
+			HTTPMessage() {}
+
 			HTTPMessage(const String& start_line)
 			{
 				this->start_line = start_line;
@@ -254,64 +258,79 @@ namespace flow_http_tools {
 			}
 	};
 
-	class HTTPRequest : public HTTPMessage {
+	class IncomingHTTPRequest : public HTTPMessage {
 		public:
-			enum HTTPMethods method;
-			String path;
+			// const Stream<String&> stream;
+			// HTTPRequestParser parser;
 
-			HTTPRequest(enum HTTPMethods method, const String& path)
-				: method(method), path(path), HTTPMessage(
-					String::format("%s %S %s", to_string(method), path, HTTP_VERSION)
-				) {}
+			// enum HTTPMethods method;
+			// String path;
 
-			template <size_t path_len>
-			HTTPRequest(enum HTTPMethods method, const char (&path)[path_len])
-				: method(method), path(path), HTTPMessage(
-					String::format("%s %S %s", to_string(method), String(path), HTTP_VERSION)
-				) {}
+			// IncomingHTTPRequest(const Stream<String&> stream)
+			// 	: stream(stream), parser(stream)
+			// {
+				
+			// }
 
-			static HTTPRequest parse(String& req_str)
-			{
-				// Convert CRLF to LF
+			// HTTPRequest(enum HTTPMethods method, const String& path)
+			// 	: method(method), path(path), HTTPMessage(
+			// 		String::format("%s %S %s", to_string(method), path, HTTP_VERSION)
+			// 	) {}
 
-				req_str.replace("\r\n", "\n");
-				req_str.print();
-				StringDelimiter delimiter(req_str);
+			// template <size_t path_len>
+			// HTTPRequest(enum HTTPMethods method, const char (&path)[path_len])
+			// 	: method(method), path(path), HTTPMessage(
+			// 		String::format("%s %S %s", to_string(method), String(path), HTTP_VERSION)
+			// 	) {}
 
-				// Read method
+			// static IncomingHTTPRequest parse(String& req_str)
+			// {
+			// 	// Convert CRLF to LF
 
-				String method_str = delimiter.delimit(' ');
-				enum HTTPMethods method = str_to_method(method_str);
+			// 	req_str.replace("\r\n", "\n");
+			// 	req_str.print();
+			// 	StringDelimiter delimiter(req_str);
 
-				// Read path
+			// 	// Read method
 
-				String path = delimiter.delimit(' ');
+			// 	String method_str = delimiter.delimit(' ');
+			// 	enum HTTPMethods method = str_to_method(method_str);
 
-				// Expect HTTP protocol version
+			// 	// Read path
 
-				String http_version = delimiter.delimit('\n');
+			// 	String path = delimiter.delimit(' ');
 
-				HTTPRequest req(method, path);
+			// 	// Expect HTTP protocol version
 
-				// Read headers
+			// 	String http_version = delimiter.delimit('\n');
 
-				while (true) {
-					String header_line = delimiter.delimit('\n');
-					if (header_line.size() == 0 || header_line == "\n") break;
+			// 	IncomingHTTPRequest req(method, path);
 
-					size_t colon_index = header_line.first_index_of(':');
-					String header_key = header_line.between(0, colon_index - 1);
-					String header_value = header_line.substring(colon_index + 2);
+			// 	// Read headers
 
-					String::format("<Header (%lld, %lld)> %S -> %S",
-						header_key.size(), header_value.size(), header_key, header_value).print();
+			// 	while (true) {
+			// 		String header_line = delimiter.delimit('\n');
+			// 		if (header_line.size() == 0 || header_line == "\n") break;
 
-					req.set_header(header_key, header_value);
-				}
+			// 		size_t colon_index = header_line.first_index_of(':');
+			// 		String header_key = header_line.between(0, colon_index - 1);
+			// 		String header_value = header_line.substring(colon_index + 2);
 
-				String::format("method = %d, path = %S, ver = %S", method, path, http_version).print();
-				return req;
-			}
+			// 		String::format("<Header (%lld, %lld)> %S -> %S",
+			// 			header_key.size(), header_value.size(), header_key, header_value).print();
+
+			// 		req.set_header(header_key, header_value);
+			// 	}
+
+			// 	String::format("method = %d, path = %S, ver = %S", method, path, http_version).print();
+			// 	return req;
+			// }
+	};
+
+	struct HTTPRequestFirstLine {
+		enum HTTPMethods method;
+		String path;
+		String http_version;
 	};
 
 	enum class HTTPRequestParserStates {
@@ -328,17 +347,26 @@ namespace flow_http_tools {
 
 	class HTTPRequestParser {
 		public:
-			Stream<String&> stream;
+			const Stream<String&>& stream;
 			String buffer;
 
 			enum HTTPRequestParserStates state;
 
-			HTTPRequestParser(Stream<String&> stream) : stream(stream)
+			std::unordered_map<String, String> headers;
+
+			EventEmitter<HTTPRequestFirstLine&> first_line_received_event;
+			EventEmitter<std::unordered_map<String, String>&> headers_received_event;
+
+			HTTPRequestParser(Stream<String&>& stream)
+				: stream(stream), buffer(String(FLOW_SOCKET_WRITE_BUFFER_SIZE))
 			{
 				stream.on_data([this](String& chunk) {
 					// Convert CRLF to LF
 
 					chunk.replace("\r\n", "\n");
+
+					// Todo: find out why this segfaults
+
 					buffer += chunk;
 
 					switch (state) {
@@ -352,24 +380,27 @@ namespace flow_http_tools {
 							if (newline_index == -1) return;
 
 							StringDelimiter delimiter(buffer);
+							HTTPRequestFirstLine first_line;
 
 							// Read method
 
 							String method_str = delimiter.delimit(' ');
-							enum HTTPMethods method = str_to_method(method_str);
+							first_line.method = str_to_method(method_str);
 
-							if (method == HTTPMethods::UNDEF)
+							if (first_line.method == HTTPMethods::UNDEF)
 								throw HTTPRequestParserErrors::UNKNOWN_METHOD;
 
 							// Read path
 
-							String path = delimiter.delimit(' ');
+							first_line.path = delimiter.delimit(' ');
 
 							// Expect HTTP protocol version
 
-							String http_version = delimiter.delimit('\n');
+							first_line.http_version = delimiter.delimit('\n');
 
 							// Todo: check HTTP protocol version
+
+							first_line_received_event.trigger(first_line);
 
 							// Clear buffer
 
@@ -399,7 +430,7 @@ namespace flow_http_tools {
 
 								ssize_t colon_index = header_line.first_index_of(':');
 
-								if (colon_index == -1) throw MALFORMED_HEADER;
+								if (colon_index == -1) throw HTTPRequestParserErrors::MALFORMED_HEADER;
 
 								// Seperate the key and value
 
@@ -410,12 +441,16 @@ namespace flow_http_tools {
 									header_key.size(), header_value.size(), header_key,
 									header_value).print();
 
+								headers[header_key] = header_value;
+
 								// Todo: do something with the header
 								// Clear buffer
 
 								buffer = buffer.substring(delimiter.offset + 1);
 								break;
 							} else {
+								headers_received_event.trigger(headers);
+
 								// Advance to the next state and fall through
 								// Todo: extract newlines and clear buffer
 
@@ -426,6 +461,8 @@ namespace flow_http_tools {
 						case HTTPRequestParserStates::PARSING_BODY:
 						{
 							// Todo: create
+
+							String::format("Body chunk: %S", chunk).print();
 						}
 					}
 				});
