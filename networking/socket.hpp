@@ -75,6 +75,7 @@ namespace flow {
 
 				String request = String::alloc(FLOW_SOCKET_READ_BUFFER_SIZE);
 				ssize_t bytes_rw = net::read(socket_fd, request);
+				request.unsafe_set_element_count(bytes_rw);
 
 				if (bytes_rw < 0) {
 					if (errno != EWOULDBLOCK && errno != EAGAIN)
