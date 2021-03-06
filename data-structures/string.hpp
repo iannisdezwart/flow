@@ -88,6 +88,14 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Checks if two Strings are not equal.
+			 */
+			bool operator!=(const String& other_str) const
+			{
+				return !operator==(other_str);
+			}
+
+			/**
 			 *  @brief  Ensures there is a NULL byte after the String and returns a
 			 *  pointer to the first character of the internal buffer of this String,
 			 *  effectively resolving a constant character array.
