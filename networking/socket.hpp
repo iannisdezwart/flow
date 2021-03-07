@@ -37,10 +37,10 @@ namespace flow {
 
 		ssize_t read(int socket_fd, String& dest)
 		{
-			return read(socket_fd, dest.begin(), dest.size());
+			return read(socket_fd, dest.begin(), dest.current_capacity());
 		}
 
-		ssize_t write(int socket_fd, String& src)
+		ssize_t write(int socket_fd, const String& src)
 		{
 			return write(socket_fd, src.begin(), src.size());
 		}
@@ -64,8 +64,12 @@ namespace flow {
 			enum SocketReadingStates reading_state = SocketReadingStates::READING;
 			enum SocketWritingStates writing_state = SocketWritingStates::IDLE;
 
+			String reading_buffer;
+
 			String *writing_buffer;
 			size_t writing_buffer_offset;
+
+			Stream<String&> out_chunks;
 
 			void io_handle_read()
 			{
@@ -73,9 +77,8 @@ namespace flow {
 
 				// Read a chunk
 
-				String request = String::alloc(FLOW_SOCKET_READ_BUFFER_SIZE);
-				ssize_t bytes_rw = net::read(socket_fd, request);
-				request.unsafe_set_element_count(bytes_rw);
+				ssize_t bytes_rw = net::read(socket_fd, reading_buffer);
+				reading_buffer.unsafe_set_element_count(bytes_rw);
 
 				if (bytes_rw < 0) {
 					if (errno != EWOULDBLOCK && errno != EAGAIN)
@@ -90,7 +93,10 @@ namespace flow {
 					reading_state = SocketReadingStates::END;
 				}
 
-				in.write(request);
+				String::format("writing %lld bytes to socket input",
+					reading_buffer.size()).print();
+
+				in.write(reading_buffer);
 			}
 
 			void io_handle_write()
@@ -106,10 +112,10 @@ namespace flow {
 
 				// Add the chunk to the output stream
 
-				out.write(chunk);
+				out_chunks.write(chunk);
 			}
 
-			static void io_write_chunk(Socket& socket, String& chunk)
+			static void io_write_chunk(Socket& socket, const String& chunk)
 			{
 				// Write the chunk
 
@@ -148,15 +154,22 @@ namespace flow {
 			Stream<String&> out;
 
 			Socket(int socket_fd, struct net::sockaddr_in client_address)
-				: socket_fd(socket_fd), client_address(client_address)
+				: socket_fd(socket_fd), client_address(client_address),
+				reading_buffer(FLOW_SOCKET_READ_BUFFER_SIZE)
 			{
 				net::set_nonblocking(socket_fd);
 
 				in.start();
 				out.start();
 
-				out.on_data([this](String& chunk) {
+				// Todo: rethink the output model
+
+				out_chunks.on_data([this](String& chunk) {
 					io_write_chunk(*this, chunk);
+				});
+
+				out.on_data([this](String& output) {
+					write(&output);
 				});
 			}
 
