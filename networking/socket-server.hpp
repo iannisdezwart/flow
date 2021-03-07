@@ -27,7 +27,11 @@ namespace flow {
 			{
 				server_address.sin_family = AF_INET;
 				server_address.sin_addr.s_addr = net::inaddr_any;
-				server_address.sin_port = net::htons(port);
+				#if __BYTE_ORDER == __BIG_ENDIAN
+				server_address.sin_port = port;
+				#else
+				server_address.sin_port = __bswap_16(port);
+				#endif
 
 				if (net::bind(socket_fd, (struct net::sockaddr *) &server_address,
 					sizeof(server_address)) < 0) throw "Error binding socket";
