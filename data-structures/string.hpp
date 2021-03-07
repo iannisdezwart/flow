@@ -2117,13 +2117,46 @@ template <>
 struct std::hash<flow::String> {
 	size_t operator()(const flow::String& str) const
 	{
-		size_t hash = 256203221;
+		#if SIZE_MAX == 0xFFFFFFFF
+		size_t hash = 443569081;
+		#else
+		size_t hash = 536003262777797;
+		#endif
 
-		// Todo: check if there is a faster way to do the modular operation
+		size_t i = 0;
+		uint8_t j = 0;
+		ssize_t size = str.size();
 
-		for (size_t i = 0, j = 0; i < str.size(); i++, j++, j %= 4) {
-			hash ^= str.get_at_index(i) << (j * 8);
-			hash *= 198491317;
+		while (size > 0) {
+			switch (size) {
+				default:
+				#if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
+				case 8:
+					hash ^= (size_t) str.get_at_index(i++) << 56;
+				case 7:
+					hash ^= (size_t) str.get_at_index(i++) << 48;
+				case 6:
+					hash ^= (size_t) str.get_at_index(i++) << 40;
+				case 5:
+					hash ^= (size_t) str.get_at_index(i++) << 32;
+				#endif
+				case 4:
+					hash ^= (size_t) str.get_at_index(i++) << 24;
+				case 3:
+					hash ^= (size_t) str.get_at_index(i++) << 16;
+				case 2:
+					hash ^= (size_t) str.get_at_index(i++) << 8;
+				case 1:
+					hash ^= (size_t) str.get_at_index(i++);
+			}
+
+			#if SIZE_MAX == 0xFFFFFFFF
+			hash *= 858371219;
+			size -= 4;
+			#else
+			size -= 8;
+			hash *= 266162830675097;
+			#endif
 		}
 
 		return hash;
