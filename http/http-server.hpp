@@ -5,23 +5,37 @@
 #include "http-message.hpp"
 #include "../networking/socket.hpp"
 #include "../networking/socket-server.hpp"
+#include "http-message.hpp"
 
 namespace flow {
 	using namespace flow_http_tools;
 
 	class HTTPServer : public SocketServer {
 		public:
+			EventEmitter<
+				const IncomingHTTPRequest&,
+				const OutgoingHTTPResponse&
+			> request_event;
+
 			HTTPServer()
 			{
-				new_socket_event.add_listener([](Socket *socket) {
+				new_socket_event.add_listener([this](Socket *socket) {
 					String::format("HTTPServer got a new socket: %d", socket->socket_fd).print();
+					HTTPRequestParser *parser = new HTTPRequestParser(socket->in);
 
-					socket->in.on_data([socket](String& data) {
-						String::format("Received %lld bytes from socket %d: %S",
-							data.size(), socket->socket_fd, data).print();
+					parser->headers_received_event.add_listener([parser, socket, this]() {
+						IncomingHTTPRequest *req = new IncomingHTTPRequest(
+							parser->body, parser->first_line, parser->headers);
+
+						OutgoingHTTPResponse *res = new OutgoingHTTPResponse(socket->out);
+
+						request_event.trigger(*req, *res);
 					});
 
-					HTTPRequestParser parser(socket->in);
+					// socket->in.on_data([socket](String& data) {
+					// 	String::format("Received %lld bytes from socket %d: %S",
+					// 		data.size(), socket->socket_fd, data).print();
+					// });
 				});
 			}
 	};
