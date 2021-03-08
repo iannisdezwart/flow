@@ -205,6 +205,10 @@ namespace flow {
 			 */
 			void operator+=(const String& str) { attach(str); }
 
+			// Prevent C++ inherited class Name Hiding
+
+			using DynamicArray::operator+=;
+
 			/**
 			 *  @brief  Alter this String by repeats it a certain amount of times.
 			 *  @param  repeat_count  The number of times to repeat this String.
