@@ -194,68 +194,49 @@ namespace flow_http_tools {
 		}
 	}
 
-	class HTTPMessage {
+	class IncomingHTTPMessage {
 		public:
-			std::unordered_map<String, String>& headers;
-
-			HTTPMessage(std::unordered_map<String, String>& headers)
-				: headers(headers) {}
-
-			// String build()
-			// {
-			// 	size_t size = 0;
-
-			// 	for (std::pair<const String&, const String&> entry : headers) {
-			// 		const String& key = entry.first;
-			// 		const String& value = entry.second;
-
-			// 		size += key.size() + value.size() + 3; // ':' + ' ' + '\n'
-			// 	}
-
-			// 	String headers_str(size);
-
-			// 	for (std::pair<const String&, const String&> entry : headers) {
-			// 		const String& key = entry.first;
-			// 		const String& value = entry.second;
-
-			// 		headers_str += String::format("%S: %S\n", key, value);
-			// 	}
-
-			// 	return String::format("%S\n%S\n", start_line, headers_str);
-			// }
-	};
-
-	class IncomingHTTPMessage : public HTTPMessage {
-		public:
+			const std::unordered_map<String, String>& headers;
 			Stream<String&>& body;
 
 			IncomingHTTPMessage(
 				Stream<String&>& body_input,
-				std::unordered_map<String, String>& headers
-			) : body(body_input), HTTPMessage(headers) {}
+				const std::unordered_map<String, String>& headers
+			) : body(body_input), headers(headers) {}
 
 			template <size_t key_len>
-			const String& get_header(const char (&key)[key_len])
+			const String& get_header(const char (&key)[key_len]) const
 			{
 				String key_str = key;
-
 				return get_header(key);
 			}
 
-			const String& get_header(const String& key)
+			const String& get_header(const String& key) const
 			{
-				return headers[key];
+				return headers.at(key);
 			}
 	};
 
-	class OutgoingHTTPMessage : public HTTPMessage {
+	class OutgoingHTTPMessage {
 		public:
-			Stream<String&>& body;
 			std::unordered_map<String, String> headers;
+			Stream<String&>& body;
 
 			OutgoingHTTPMessage(
 				Stream<String&>& socket_output
-			) : body(socket_output), HTTPMessage(headers) {}
+			) : body(socket_output) {}
+
+			template <size_t key_len>
+			const String& get_header(const char (&key)[key_len]) const
+			{
+				String key_str = key;
+				return get_header(key);
+			}
+
+			const String& get_header(const String& key) const
+			{
+				return headers.at(key);
+			}
 
 			template <size_t key_len, size_t value_len>
 			void set_header(const char (&key)[key_len], const char (&value)[value_len])
@@ -270,56 +251,135 @@ namespace flow_http_tools {
 			{
 				headers[key] = value;
 			}
+
+			String build_headers()
+			{
+				// Calculate size
+
+				size_t size = 0;
+
+				for (std::pair<String, String> header : headers) {
+					const String& key = header.first;
+					const String& value = header.second;
+
+					size += key.size() + value.size() + 3;
+				}
+
+				size += 1;
+
+				// Build headers string
+
+				String headers_str(size);
+
+				for (std::pair<String, String> header : headers) {
+					const String& key = header.first;
+					const String& value = header.second;
+
+					headers_str += String::format("%S: %S\n", key, value);
+				}
+
+				headers_str += '\n';
+
+				return headers_str;
+			}
 	};
 
 	struct HTTPRequestFirstLine {
 		enum HTTPMethods method;
 		String path;
 		String http_version;
-	};
 
-	class HTTPRequest {
-		public:
-			const HTTPRequestFirstLine& first_line;
-
-			HTTPRequest(const HTTPRequestFirstLine& first_line)
-				: first_line(first_line) {}
+		String build()
+		{
+			return String::format("%s %S %S\n", to_string(method), path, http_version);
+		}
 	};
 
 	struct HTTPResponseFirstLine {
-		enum HTTPStatusCodes status_code;
 		String http_version;
+		enum HTTPStatusCodes status_code;
+
+		String build()
+		{
+			return String::format("%S %s\n", http_version, to_string(status_code));
+		}
 	};
 
-	class HTTPResponse {
+	class IncomingHTTPRequest : public IncomingHTTPMessage {
 		public:
-			HTTPResponseFirstLine first_line = {
-				.status_code = HTTPStatusCodes::OK,
-				.http_version = "HTTP/1.1"
-			};
+			const HTTPRequestFirstLine& first_line;
 
-			HTTPResponse() {}
-
-			void set_status_code(enum HTTPStatusCodes status_code)
-			{
-				first_line.status_code = status_code;
-			}
-	};
-
-	class IncomingHTTPRequest : public IncomingHTTPMessage, public HTTPRequest {
-		public:
 			IncomingHTTPRequest(
 				Stream<String&>& body_input,
 				const HTTPRequestFirstLine& first_line,
-				std::unordered_map<String, String>& headers
-			) : IncomingHTTPMessage(body_input, headers), HTTPRequest(first_line) {}
+				const std::unordered_map<String, String>& headers
+			) : IncomingHTTPMessage(body_input, headers), first_line(first_line) {}
 	};
 
-	class OutgoingHTTPResponse : public OutgoingHTTPMessage, public HTTPResponse {
+	class IncomingHTTPResponse : public IncomingHTTPMessage {
 		public:
+			const HTTPResponseFirstLine& first_line;
+
+			IncomingHTTPResponse(
+				Stream<String&>& body_input,
+				const HTTPResponseFirstLine& first_line,
+				const std::unordered_map<String, String>& headers
+			) : IncomingHTTPMessage(body_input, headers), first_line(first_line) {}
+	};
+
+	class OutgoingHTTPRequest : public OutgoingHTTPMessage {
+		public:
+			HTTPRequestFirstLine first_line;
+
+			OutgoingHTTPRequest(
+				Stream<String&>& socket_output
+			) : OutgoingHTTPMessage(socket_output)
+			{
+				first_line.http_version = "HTTP/1.1";
+			}
+
+			void send(enum HTTPMethods method, const String& path)
+			{
+				first_line.method = method;
+				first_line.path = path;
+
+				// Queue the first line for writing
+
+				String first_line_str = first_line.build();
+				body.write(first_line_str);
+
+				// Queue the headers for writing
+
+				String headers_str = build_headers();
+				body.write(headers_str);
+			}
+	};
+
+	class OutgoingHTTPResponse : public OutgoingHTTPMessage {
+		public:
+			HTTPResponseFirstLine first_line;
+
 			OutgoingHTTPResponse(
 				Stream<String&>& socket_output
-			) : OutgoingHTTPMessage(socket_output), HTTPResponse() {}
+			) : OutgoingHTTPMessage(socket_output)
+			{
+				first_line.http_version = "HTTP/1.1";
+			}
+
+			void send(enum HTTPStatusCodes status_code)
+			{
+				first_line.status_code = status_code;
+
+				// Queue the first line for writing
+
+				String first_line_str = first_line.build();
+				body.write(first_line_str);
+
+				// Queue the headers for writing
+
+				String headers_str = build_headers();
+				body.write(headers_str);
+			}
 	};
 
 	enum class HTTPRequestParserStates {
@@ -359,7 +419,6 @@ namespace flow_http_tools {
 					// Convert CRLF to LF
 
 					chunk.replace("\r\n", "\n");
-					String::format("HTTPRequestParser got a chunk").print();
 
 					if (
 						state == HTTPRequestParserStates::PARSING_FIRST_LINE ||
@@ -433,10 +492,6 @@ namespace flow_http_tools {
 
 								String header_key = header_line.between(0, colon_index - 1);
 								String header_value = header_line.substring(colon_index + 2);
-
-								String::format("<Header (%lld, %lld)> %S -> %S",
-									header_key.size(), header_value.size(), header_key,
-									header_value).print();
 
 								headers[header_key] = header_value;
 
