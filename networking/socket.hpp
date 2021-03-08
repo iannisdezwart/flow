@@ -3,6 +3,7 @@
 
 #include "../data-structures/stream.hpp"
 #include "../data-structures/string.hpp"
+#include "../data-structures/queue.hpp"
 
 #ifndef FLOW_SOCKET_READ_BUFFER_SIZE
 #define FLOW_SOCKET_READ_BUFFER_SIZE (size_t) 4096
@@ -66,10 +67,7 @@ namespace flow {
 
 			String reading_buffer;
 
-			String *writing_buffer;
-			size_t writing_buffer_offset;
-
-			Stream<String&> out_chunks;
+			Queue<String *> write_queue;
 
 			void io_handle_read()
 			{
@@ -93,57 +91,22 @@ namespace flow {
 					reading_state = SocketReadingStates::END;
 				}
 
-				String::format("writing %lld bytes to socket input",
-					reading_buffer.size()).print();
-
 				in.write(reading_buffer);
 			}
 
 			void io_handle_write()
 			{
 				if (writing_state == SocketWritingStates::IDLE) return;
-
-				// Prepare a chunk for writing
-
-				size_t chunk_size = std::min(writing_buffer->size() - writing_buffer_offset,
-					FLOW_SOCKET_WRITE_BUFFER_SIZE);
-				String chunk = writing_buffer->substring(writing_buffer_offset, chunk_size);
-				writing_buffer_offset += chunk_size;
-
-				// Add the chunk to the output stream
-
-				out_chunks.write(chunk);
-			}
-
-			static void io_write_chunk(Socket& socket, const String& chunk)
-			{
-				// Write the chunk
-
-				ssize_t bytes_rw = net::write(socket.socket_fd, chunk);
-
-				// Stop writing after buffer is fully written
-
-				if (socket.writing_buffer_offset >= socket.writing_buffer->size()) {
-					delete socket.writing_buffer;
-					socket.writing_buffer_offset = 0;
+				if (write_queue.size() == 0) {
+					writing_state = SocketWritingStates::IDLE;
 					return;
 				}
 
-				// Release already written bytes
+				// Write the next chunk
 
-				if (socket.writing_buffer_offset >= FLOW_SOCKET_WRITE_BUFFER_RELEASE_SIZE) {
-					size_t new_size = socket.writing_buffer->size() - socket.writing_buffer_offset;
-					String *new_writing_buffer = new String(new_size);
-
-					for (size_t i = 0; i < new_size; i++) {
-						new_writing_buffer->set_at_index(i,
-							socket.writing_buffer->get_at_index(new_size + i));
-					}
-
-					delete socket.writing_buffer;
-					socket.writing_buffer = new_writing_buffer;
-					socket.writing_buffer_offset = 0;
-				}
+				String *chunk = write_queue.pop();
+				ssize_t bytes_rw = net::write(socket_fd, *chunk);
+				delete chunk;
 			}
 
 		public:
@@ -162,14 +125,31 @@ namespace flow {
 				in.start();
 				out.start();
 
-				// Todo: rethink the output model
+				out.on_data([this](String& data) {
+					// Split String into chunks and add the chunks to the write queue
 
-				out_chunks.on_data([this](String& chunk) {
-					io_write_chunk(*this, chunk);
-				});
+					String *chunk;
+					size_t i = 0;
+					size_t data_size = data.size();
 
-				out.on_data([this](String& output) {
-					write(&output);
+					while (i < data_size) {
+						size_t chunk_size = std::min(data_size,
+							FLOW_SOCKET_WRITE_BUFFER_SIZE);
+
+						chunk = new String(chunk_size);
+						chunk->unsafe_increment_element_count(chunk_size);
+
+						for (size_t j = 0; j < chunk_size; j++) {
+							chunk->set_at_index(j, data[i + j]);
+						}
+
+						write_queue.push(chunk);
+						i += chunk_size;
+					}
+
+					// Enable writing state
+
+					writing_state = SocketWritingStates::WRITING;
 				});
 			}
 
@@ -177,17 +157,6 @@ namespace flow {
 			{
 				io_handle_read();
 				io_handle_write();
-			}
-
-			void write(String *data)
-			{
-				if (writing_state == SocketWritingStates::WRITING) {
-					writing_buffer->attach(*data);
-				} else {
-					writing_buffer = data;
-					writing_buffer_offset = 0;
-					writing_state = SocketWritingStates::WRITING;
-				}
 			}
 	};
 };
