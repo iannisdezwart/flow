@@ -219,10 +219,11 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Gets the i-th element on the buffer.
+			 *  @brief  Returns a read/write reference to the value at the i-th
+			 *  element of the DynamicArray.
 			 *  @param  index  i
 			 */
-			type& operator[](size_t index) const
+			type& operator[](size_t index)
 			{
 				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index >= current_element_count) {
@@ -234,11 +235,11 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Sets the i-th element on the buffer.
+			 *  @brief  Returns a read-only reference to the value at the i-th
+			 *  element of the DynamicArray.
 			 *  @param  index  i
-			 *  @param  =  The value to assign at the index.
 			 */
-			type& operator[](size_t index)
+			const type& operator[](size_t index) const
 			{
 				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index >= current_element_count) {
@@ -255,15 +256,25 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(n), n = found indices
 			 */
-			DynamicArray<size_t> indices_of(type value) const
+			DynamicArray<size_t> indices_of(const type& value) const
 			{
 				DynamicArray<size_t> indices;
 
-				for (int i = 0; i < size(); i++) {
+				for (size_t i = 0; i < size(); i++) {
 					if (get_at_index(i) == value) indices.append(i);
 				}
 
 				return indices;
+			}
+
+			size_t calc_growth_size(size_t new_size)
+			{
+				size_t growth_ratio = ceil((float) new_size / (float) current_buffer_size);
+
+				// The number of times we must multiply by 2 to reserve space
+
+				size_t growth_exponent = ceil(log2(growth_ratio));
+				return current_buffer_size * pow(2, growth_exponent);
 			}
 
 			/**
@@ -278,12 +289,7 @@ namespace flow {
 				size_t new_size = current_element_count + size;
 
 				if (new_size > current_buffer_size) {
-					size_t growth_ratio = ceil((float) new_size / (float) current_buffer_size);
-
-					// The number of times we must multiply by 2 to reserve space
-
-					size_t growth_exponent = ceil(log2(growth_ratio));
-					size_t new_buffer_size = current_buffer_size * pow(2, growth_exponent);
+					size_t new_buffer_size = calc_growth_size(new_size);
 
 					// Resize the buffer
 
@@ -471,6 +477,8 @@ namespace flow {
 			 */
 			void attach(DynamicArray<type>& other_dynamic_array)
 			{
+				if (other_dynamic_array.size() == 0) return;
+
 				// Reserve space
 
 				reserve(other_dynamic_array.size());
@@ -498,6 +506,45 @@ namespace flow {
 			void operator+=(DynamicArray<type>& other_dynamic_array)
 			{
 				attach(other_dynamic_array);
+			}
+
+			/**
+			 *  @brief  Concatenates an other DynamicArray at the beginning of
+			 *  this DynamicArray.
+			 *  The DynamicArray will automatically grow to a power of 2 if needed.
+			 *  @param other_dynamic_array  The DynamicArray to precede to this DynamicArray.
+			 *  @note  Runtime: O(m + n), m = other_dynamic_array.size(), n = size()
+			 *  @note  Memory: O(m + n)
+			 */
+			void precede(DynamicArray<type>& other_dynamic_array)
+			{
+				if (other_dynamic_array.size() == 0) return;
+
+				// Allocate a new buffer
+
+				size_t new_size = size() + other_dynamic_array.size();
+				current_buffer_size = calc_growth_size(new_size);
+
+				type *new_buffer = allocate_buffer();
+
+				// Copy the values of the other DynamicArray into the new buffer
+
+				for (size_t i = 0; i < other_dynamic_array.size(); i++) {
+					new_buffer[i] = other_dynamic_array.get_at_index(i);
+				}
+
+				// Copy the value of this DynamicArray into the new buffer
+
+				for (size_t i = 0; i < size(); i++) {
+					new_buffer[other_dynamic_array.size() + i] = get_at_index(i);
+				}
+
+				// Update the buffer pointer and element count
+
+				delete[] buffer;
+				buffer = new_buffer;
+
+				unsafe_increment_element_count(other_dynamic_array.size());
 			}
 
 			/**
