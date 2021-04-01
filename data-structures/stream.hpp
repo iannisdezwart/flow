@@ -5,6 +5,9 @@
 #include "../events/event_emitter.hpp"
 
 namespace flow {
+	/**
+	 *  @brief  An event-driven templated stream implementation
+	 */
 	template <typename type>
 	class Stream {
 		public:
