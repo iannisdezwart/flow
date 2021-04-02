@@ -78,9 +78,21 @@ namespace flow {
 
 				while (i < listeners.size()) {
 					EventListener<Args...>& listener = listeners[i];
+
+					// We must save the recurrent flag in case the callback calls
+					// EventEmitter::remove_listener() or EventEmitter::add_listener().
+					// This would alter the listeners DynamicArray and maybe also the
+					// reference, making it invalid or cause undefined behaviour.
+
+					bool recurrent = listener.recurrent;
+
+					// Fire the callback now
+
 					listener.callback(args...);
 
-					if (listener.recurrent) {
+					// And clean up this EventListener if it is not recurrent
+
+					if (recurrent) {
 						i++;
 					} else {
 						if (i != listeners.size() - 1) {
