@@ -1,12 +1,16 @@
 #ifndef FLOW_FILE_HEADER
 #define FLOW_FILE_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/string.hpp"
 #include "../data-structures/stream.hpp"
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 
 namespace flow_file_tools {
 	enum class FileMode { READ, WRITE, APPEND };
+	enum class FileErrors { DOES_NOT_EXIST };
 };
 
 namespace flow {
@@ -40,15 +44,16 @@ namespace flow {
 
 				switch (Mode) {
 					case FileMode::READ:
-						file = fopen(file_name, "r");
+						file = std::fopen(file_name, "r");
+						if (file == NULL) throw FileErrors::DOES_NOT_EXIST;
 						break;
 
 					case FileMode::WRITE:
-						file = fopen(file_name, "w+");
+						file = std::fopen(file_name, "w+");
 						break;
 
 					case FileMode::APPEND:
-						file = fopen(file_name, "a+");
+						file = std::fopen(file_name, "a+");
 						break;
 				}
 
@@ -67,7 +72,7 @@ namespace flow {
 				if (Mode == FileMode::WRITE || Mode == FileMode::APPEND) {
 					write_stream.on_data([this](String& str) {
 						bytes_written += str.size();
-						fwrite(str.begin(), 1, str.size(), file);
+						std::fwrite(str.begin(), 1, str.size(), file);
 					});
 
 					write_stream.start();
@@ -94,16 +99,16 @@ namespace flow {
 			{
 				// Save current file pointer location
 
-				size_t current_offset = ftell(file);
+				size_t current_offset = std::ftell(file);
 
 				// Move to EOF and compute the size
 
-				fseek(file, 0, SEEK_END);
-				size_t size = ftell(file);
+				std::fseek(file, 0, SEEK_END);
+				size_t size = std::ftell(file);
 
 				// Move back to the original file pointer location
 
-				fseek(file, current_offset, SEEK_SET);
+				std::fseek(file, current_offset, SEEK_SET);
 				return size;
 			}
 
@@ -119,7 +124,7 @@ namespace flow {
 				// Read a chunk
 
 				String chunk = String::alloc(size);
-				size_t n = fread(chunk.begin(), 1, size, file);
+				size_t n = std::fread(chunk.begin(), 1, size, file);
 				chunk.unsafe_set_element_count(n);
 
 				// Write the chunk to the read_stream

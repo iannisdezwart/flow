@@ -1,6 +1,8 @@
 #ifndef FLOW_SOCKET_SERVER_HEADER
 #define FLOW_SOCKET_SERVER_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/dynamic-array.hpp"
 #include "../data-structures/string.hpp"
 #include "../networking/socket.hpp"
@@ -23,8 +25,12 @@ namespace flow {
 				if (socket_fd < 0) throw "Error opening socket";
 			}
 
-			void listen_to(uint16_t port)
-			{
+			void listen_to(
+				uint16_t port,
+				std::function<void (SocketServer&)> callback = NULL
+			) {
+				this->port = port;
+
 				server_address.sin_family = AF_INET;
 				server_address.sin_addr.s_addr = net::inaddr_any;
 				#if __BYTE_ORDER == __BIG_ENDIAN
@@ -42,6 +48,10 @@ namespace flow {
 
 				struct net::sockaddr_in client_address;
 				net::socklen_t client_address_length = sizeof(client_address);
+
+				// Server started successfully, fire the callback
+
+				if (callback != NULL) callback(*this);
 
 				while (true) {
 					client_socket_fd = net::accept(socket_fd,

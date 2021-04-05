@@ -1,6 +1,8 @@
 #ifndef FLOW_SOCKET_HEADER
 #define FLOW_SOCKET_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/stream.hpp"
 #include "../data-structures/string.hpp"
 #include "../data-structures/queue.hpp"
@@ -66,7 +68,6 @@ namespace flow {
 			enum SocketWritingStates writing_state = SocketWritingStates::IDLE;
 
 			String reading_buffer;
-
 			Queue<String *> write_queue;
 
 			void io_handle_read()
@@ -116,6 +117,8 @@ namespace flow {
 			Stream<String&> in;
 			Stream<String&> out;
 
+			EventEmitter<Stream<String&>&, Stream<String&>&> io_event;
+
 			Socket(int socket_fd, struct net::sockaddr_in client_address)
 				: socket_fd(socket_fd), client_address(client_address),
 				reading_buffer(FLOW_SOCKET_READ_BUFFER_SIZE)
@@ -156,6 +159,7 @@ namespace flow {
 			void handle_io()
 			{
 				io_handle_read();
+				io_event.trigger(in, out);
 				io_handle_write();
 			}
 	};

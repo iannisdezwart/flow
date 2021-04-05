@@ -1,9 +1,12 @@
 #ifndef FLOW_HTTP_RESPONSE_HEADER
 #define FLOW_HTTP_RESPONSE_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/string.hpp"
 #include "../data-structures/string-delimiter.hpp"
 #include "../data-structures/stream.hpp"
+#include "../data-structures/content-provider.hpp"
 #include "../networking/socket.hpp"
 
 namespace flow_http_tools {
@@ -196,13 +199,13 @@ namespace flow_http_tools {
 
 	class IncomingHTTPMessage {
 		public:
+			Socket& socket;
 			const std::unordered_map<String, String>& headers;
-			Stream<String&>& body;
 
 			IncomingHTTPMessage(
-				Stream<String&>& body_input,
+				Socket& socket,
 				const std::unordered_map<String, String>& headers
-			) : body(body_input), headers(headers) {}
+			) : socket(socket), headers(headers) {}
 
 			template <size_t key_len>
 			const String& get_header(const char (&key)[key_len]) const
@@ -219,12 +222,12 @@ namespace flow_http_tools {
 
 	class OutgoingHTTPMessage {
 		public:
+			Socket& socket;
 			std::unordered_map<String, String> headers;
-			Stream<String&>& body;
 
 			OutgoingHTTPMessage(
-				Stream<String&>& socket_output
-			) : body(socket_output) {}
+				Socket& socket
+			) : socket(socket) {}
 
 			template <size_t key_len>
 			const String& get_header(const char (&key)[key_len]) const
@@ -243,8 +246,21 @@ namespace flow_http_tools {
 			{
 				String key_str = key;
 				String value_str = value;
-
 				set_header(key_str, value_str);
+			}
+
+			template <size_t key_len>
+			void set_header(const char (&key)[key_len], const String& value)
+			{
+				String key_str = key;
+				set_header(key_str, value);
+			}
+
+			template <size_t value_len>
+			void set_header(const String& key, const char (&value)[value_len])
+			{
+				String value_str = value;
+				set_header(key, value_str);
 			}
 
 			void set_header(const String& key, const String& value)
@@ -303,83 +319,6 @@ namespace flow_http_tools {
 		{
 			return String::format("%S %s\n", http_version, to_string(status_code));
 		}
-	};
-
-	class IncomingHTTPRequest : public IncomingHTTPMessage {
-		public:
-			const HTTPRequestFirstLine& first_line;
-
-			IncomingHTTPRequest(
-				Stream<String&>& body_input,
-				const HTTPRequestFirstLine& first_line,
-				const std::unordered_map<String, String>& headers
-			) : IncomingHTTPMessage(body_input, headers), first_line(first_line) {}
-	};
-
-	class IncomingHTTPResponse : public IncomingHTTPMessage {
-		public:
-			const HTTPResponseFirstLine& first_line;
-
-			IncomingHTTPResponse(
-				Stream<String&>& body_input,
-				const HTTPResponseFirstLine& first_line,
-				const std::unordered_map<String, String>& headers
-			) : IncomingHTTPMessage(body_input, headers), first_line(first_line) {}
-	};
-
-	class OutgoingHTTPRequest : public OutgoingHTTPMessage {
-		public:
-			HTTPRequestFirstLine first_line;
-
-			OutgoingHTTPRequest(
-				Stream<String&>& socket_output
-			) : OutgoingHTTPMessage(socket_output)
-			{
-				first_line.http_version = "HTTP/1.1";
-			}
-
-			void send(enum HTTPMethods method, const String& path)
-			{
-				first_line.method = method;
-				first_line.path = path;
-
-				// Queue the first line for writing
-
-				String first_line_str = first_line.build();
-				body.write(first_line_str);
-
-				// Queue the headers for writing
-
-				String headers_str = build_headers();
-				body.write(headers_str);
-			}
-	};
-
-	class OutgoingHTTPResponse : public OutgoingHTTPMessage {
-		public:
-			HTTPResponseFirstLine first_line;
-
-			OutgoingHTTPResponse(
-				Stream<String&>& socket_output
-			) : OutgoingHTTPMessage(socket_output)
-			{
-				first_line.http_version = "HTTP/1.1";
-			}
-
-			void send(enum HTTPStatusCodes status_code)
-			{
-				first_line.status_code = status_code;
-
-				// Queue the first line for writing
-
-				String first_line_str = first_line.build();
-				body.write(first_line_str);
-
-				// Queue the headers for writing
-
-				String headers_str = build_headers();
-				body.write(headers_str);
-			}
 	};
 
 	enum class HTTPRequestParserStates {
@@ -528,6 +467,198 @@ namespace flow_http_tools {
 
 namespace flow {
 	using namespace flow_http_tools;
+
+	class IncomingHTTPRequest : public IncomingHTTPMessage {
+		public:
+			const HTTPRequestFirstLine& first_line;
+
+			IncomingHTTPRequest(
+				Socket& socket,
+				const HTTPRequestFirstLine& first_line,
+				const std::unordered_map<String, String>& headers
+			) : IncomingHTTPMessage(socket, headers), first_line(first_line) {}
+	};
+
+	class IncomingHTTPResponse : public IncomingHTTPMessage {
+		public:
+			const HTTPResponseFirstLine& first_line;
+
+			IncomingHTTPResponse(
+				Socket& socket,
+				const HTTPResponseFirstLine& first_line,
+				const std::unordered_map<String, String>& headers
+			) : IncomingHTTPMessage(socket, headers), first_line(first_line) {}
+	};
+
+	class OutgoingHTTPRequest : public OutgoingHTTPMessage {
+		public:
+			HTTPRequestFirstLine first_line;
+
+			OutgoingHTTPRequest(
+				Socket& socket
+			) : OutgoingHTTPMessage(socket)
+			{
+				first_line.http_version = "HTTP/1.1";
+			}
+
+			void send(enum HTTPMethods method, const String& path)
+			{
+				first_line.method = method;
+				first_line.path = path;
+
+				// Queue the first line for writing
+
+				String first_line_str = first_line.build();
+				socket.out.write(first_line_str);
+
+				// Queue the headers for writing
+
+				String headers_str = build_headers();
+				socket.out.write(headers_str);
+			}
+	};
+
+	class OutgoingHTTPResponse : public OutgoingHTTPMessage {
+		private:
+			size_t body_provider_offset;
+
+		public:
+			HTTPResponseFirstLine first_line;
+
+			OutgoingHTTPResponse(
+				Socket& socket
+			) : OutgoingHTTPMessage(socket)
+			{
+				first_line.http_version = "HTTP/1.1";
+			}
+
+			void send(enum HTTPStatusCodes status_code)
+			{
+				first_line.status_code = status_code;
+
+				// Queue the first line for writing
+
+				String first_line_str = first_line.build();
+				socket.out.write(first_line_str);
+
+				// Queue the headers for writing
+
+				String headers_str = build_headers();
+				socket.out.write(headers_str);
+			}
+
+			void provide_body(
+				enum HTTPStatusCodes status_code,
+				const String& content_type,
+				ContentProvider *content_provider
+			) {
+				// Set the headers
+
+				set_header("Content-Type", content_type);
+				set_header("Content-Length", String::from_num(content_provider->size));
+
+				// Send the request
+
+				send(status_code);
+
+				String::format(
+					"provide_body called. "
+					"OutgoingHTTPResponse = %llx, "
+					"content_provider = %llx",
+					(size_t) this, (size_t) content_provider
+				).print();
+
+				// Send the body
+
+				size_t *io_event_listener_id = new size_t;
+
+				*io_event_listener_id = socket.io_event.add_listener(
+					[content_provider, io_event_listener_id, this]
+					(Stream<String&>& in, Stream<String&>& out)
+				{
+					String::format(
+						"io_event: sending chunk. id = %llu, "
+						"OutgoingHTTPResponse = %llx, "
+						"content_provider = %llx",
+						*io_event_listener_id, (size_t) this, (size_t) content_provider
+					).print();
+
+					// Send a chunk
+
+					content_provider->provide(out, FLOW_SOCKET_WRITE_BUFFER_SIZE);
+
+					// Stop when the content is fully sent
+
+					if (content_provider->finished) {
+						printf("\x1b[41mcontent provider finished, deleting it\x1b[0m\n");
+						socket.io_event.remove_listener(*io_event_listener_id);
+						printf("\x1b[41mremoved listener\x1b[0m\n");
+						printf("\x1b[41mdeleting io_event_listener_id @ %lx\x1b[0m\n", (size_t) io_event_listener_id);
+						// delete io_event_listener_id;
+						// printf("\x1b[41mdeleted listener_id\x1b[0m\n");
+						// printf("\x1b[41mdeleting content_provider @ %lx\x1b[0m\n", (size_t) content_provider);
+						// delete content_provider;
+						// printf("\x1b[41mdeleted content_provider\x1b[0m\n");
+					}
+				});
+
+				printf("socket.io_event.add_listener -> %lu\n", *io_event_listener_id);
+			}
+
+			void provide_body(
+				enum HTTPStatusCodes status_code,
+				size_t size,
+				const String& content_type,
+				std::function<bool(
+					size_t offset,
+					size_t desired_chunk_size,
+					Stream<String&>& stream
+				)> callback,
+				std::function<void()> finished_callback
+			) {
+				// Set the headers
+
+				set_header("Content-Type", content_type);
+				set_header("Content-Length", String::from_num(size));
+
+				// Send the request
+
+				send(status_code);
+
+				// Send the body
+
+				// Fix the reference to the offset, it goes out of scope after this
+				// function returns.
+
+				body_provider_offset = 0;
+				Stream<String&>& out = socket.out;
+
+				size_t io_event_listener_id = socket.io_event.add_listener([&](
+					Stream<String&>& in, Stream<String&>& out)
+				{
+					// Count the number of bytes being written
+
+					size_t write_event_listener_id = out.write_event.add_listener(
+						[&](String& data)
+					{
+						body_provider_offset += data.size();
+					});
+
+					// Fire the callback
+
+					bool keep_going = callback(body_provider_offset,
+						FLOW_SOCKET_WRITE_BUFFER_SIZE, out);
+
+					// Stop counting the number of bytes being written
+
+					out.write_event.remove_listener(write_event_listener_id);
+
+					// Stop on cancel
+
+					if (!keep_going) socket.io_event.remove_listener(io_event_listener_id);
+				});
+			}
+	};
 };
 
 #endif

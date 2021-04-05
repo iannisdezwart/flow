@@ -1,6 +1,8 @@
 #ifndef FLOW_HTTP_SERVER_HEADER
 #define FLOW_HTTP_SERVER_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/string.hpp"
 #include "http-message.hpp"
 #include "../networking/socket.hpp"
@@ -24,9 +26,9 @@ namespace flow {
 
 					parser->headers_received_event.add_listener([parser, socket, this]() {
 						IncomingHTTPRequest *req = new IncomingHTTPRequest(
-							parser->body, parser->first_line, parser->headers);
+							*socket, parser->first_line, parser->headers);
 
-						OutgoingHTTPResponse *res = new OutgoingHTTPResponse(socket->out);
+						OutgoingHTTPResponse *res = new OutgoingHTTPResponse(*socket);
 
 						request_event.trigger(*req, *res);
 					});
