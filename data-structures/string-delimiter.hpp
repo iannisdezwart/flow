@@ -1,6 +1,8 @@
 #ifndef FLOW_STRING_DELIMITER_HEADER
 #define FLOW_STRING_DELIMITER_HEADER
 
+#include <bits/stdc++.h>
+
 #include "string.hpp"
 
 namespace flow {

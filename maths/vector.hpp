@@ -1,6 +1,8 @@
 #ifndef FLOW_VECTOR_HEADER
 #define FLOW_VECTOR_HEADER
 
+#include <bits/stdc++.h>
+
 namespace flow {
 	template <size_t size, typename num_t = double>
 	class Vector {

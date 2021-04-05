@@ -1,6 +1,8 @@
 #ifndef FLOW_DYNAMIC_ARRAY_HEADER
 #define FLOW_DYNAMIC_ARRAY_HEADER
 
+#include <bits/stdc++.h>
+
 #include "buffer.hpp"
 
 namespace flow {

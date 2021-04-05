@@ -1,6 +1,8 @@
 #ifndef FLOW_STRING_HEADER
 #define FLOW_STRING_HEADER
 
+#include <bits/stdc++.h>
+
 #include "dynamic-array.hpp"
 #include "string-tools.hpp"
 

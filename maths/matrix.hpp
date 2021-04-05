@@ -1,6 +1,8 @@
 #ifndef FLOW_MATRIX_HEADER
 #define FLOW_MATRIX_HEADER
 
+#include <bits/stdc++.h>
+
 #include "vector.hpp"
 
 namespace flow {

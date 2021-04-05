@@ -1,6 +1,8 @@
 #ifndef FLOW_QUEUE_HEADER
 #define FLOW_QUEUE_HEADER
 
+#include <bits/stdc++.h>
+
 #include "dynamic-array.hpp"
 
 namespace flow_queue_tools {

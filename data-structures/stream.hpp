@@ -1,6 +1,8 @@
 #ifndef FLOW_STREAM_HEADER
 #define FLOW_STREAM_HEADER
 
+#include <bits/stdc++.h>
+
 #include "../data-structures/dynamic-array.hpp"
 #include "../events/event_emitter.hpp"
 

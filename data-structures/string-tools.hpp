@@ -1,6 +1,8 @@
 #ifndef FLOW_STRING_TOOLS_HEADER
 #define FLOW_STRING_TOOLS_HEADER
 
+#include <bits/stdc++.h>
+
 namespace flow_tools {
 	template <char starting_alphabetical_digit = 'A'>
 	char get_base_digit(uint8_t num) {

@@ -1,6 +1,8 @@
 #ifndef FLOW_CONTENT_PROVIDER_HEADER
 #define FLOW_CONTENT_PROVIDER_HEADER
 
+#include <bits/stdc++.h>
+
 #include "stream.hpp"
 #include "string.hpp"
 

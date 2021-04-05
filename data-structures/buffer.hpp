@@ -1,6 +1,8 @@
 #ifndef FLOW_BUFFER_ARRAY_HEADER
 #define FLOW_BUFFER_ARRAY_HEADER
 
+#include <bits/stdc++.h>
+
 namespace flow {
 	namespace BufferErrors {
 		enum BufferErrors {
