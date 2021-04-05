@@ -79,7 +79,6 @@ namespace flow {
 
 	/**
 	 *  @brief  LinkedList implementation.
-	 *  Insertion: O(n). Deletion: O(n)
 	 *  @tparam  type  The type of values to store on this LinkedList.
 	 *  @tparam  Doubly  If true, the tail element will be available for
 	 *  instant access and allows for some optimisations. Uses more memory.
@@ -177,6 +176,92 @@ namespace flow {
 			 *  @brief  Returns the current number of elements on the LinkedList.
 			 */
 			size_t size() const { return this->cur_size; }
+
+			class Iterator {
+				public:
+					using iterator_category = std::forward_iterator_tag;
+					using difference_type = std::ptrdiff_t;
+
+					Iterator(LinkedListNode<type, Doubly> *node)
+						: node(node) {}
+
+					const type& operator*() const
+					{
+						return node->value;
+					}
+
+					type operator->()
+					{
+						return node->value;
+					}
+
+					Iterator& /* prefix */ operator++()
+					{
+						node = node->next;
+						return *this;
+					}
+
+					Iterator /* postfix */ operator++(int)
+					{
+						Iterator old_it = *this;
+						node = node->next;
+						return old_it;
+					}
+
+					template <bool T = true>
+					typename std::enable_if<T && Doubly, Iterator>::type
+					/* Iterator */ /* prefix */ operator--()
+					{
+						node = node->prev;
+						return *this;
+					}
+
+					template <bool T = true>
+					typename std::enable_if<T && Doubly, Iterator>::type
+					/* Iterator */ /* postfix */ operator--(int)
+					{
+						Iterator old_it = *this;
+						node = node->prev;
+						return old_it;
+					}
+
+					bool operator==(const Iterator& other)
+					{
+						return node == other.node;
+					}
+
+					bool operator!=(const Iterator& other)
+					{
+						return node != other.node;
+					}
+
+				private:
+					LinkedListNode<type, Doubly> *node;
+			};
+
+			Iterator begin()
+			{
+				return Iterator(this->head);
+			}
+
+			Iterator end()
+			{
+				return Iterator(NULL);
+			}
+
+			template <bool T = true>
+			typename std::enable_if<T && Doubly, Iterator>::type
+			/* Iterator */ rbegin()
+			{
+				return Iterator(this->tail);
+			}
+
+			template <bool T = true>
+			typename std::enable_if<T && Doubly, Iterator>::type
+			/* Iterator */ rend()
+			{
+				return Iterator(NULL);
+			}
 
 			/**
 			 *  @brief  Returns a read-only reference to the element at the i-th index
@@ -723,6 +808,14 @@ namespace flow {
 				}
 			}
 	};
+
+	/**
+	 *  @brief  Doubly LinkedList implementation.
+	 *  This is an alias for LinkedList<type, true>.
+	 *  @tparam  type  The type of values to store on this LinkedList.
+	 */
+	template <typename type>
+	using DoublyLinkedList = LinkedList<type, true>;
 };
 
 #endif
