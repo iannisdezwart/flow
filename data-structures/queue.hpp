@@ -19,7 +19,8 @@ namespace flow {
 
 	enum class QueueErrors {
 		POP_EMPTY_QUEUE,
-		INDEX_OUT_OF_BOUNDS
+		INDEX_OUT_OF_BOUNDS,
+		ATTACH_QUEUE_TO_ITSELF
 	};
 
 	template <typename type>
@@ -60,8 +61,8 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns a reference to the value of the first element on
-			 *  the Queue.
+			 *  @brief  Returns a read-only reference to the value of the first
+			 *  element on the Queue.
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
@@ -71,8 +72,19 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns a reference to the value of the last element on
-			 *  the Queue.
+			 *  @brief  Returns a read/write reference to the value of the first
+			 *  element on the Queue.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			type& front()
+			{
+				return first->value;
+			}
+
+			/**
+			 *  @brief  Returns a read-only reference to the value of the last
+			 *  element on the Queue.
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
@@ -82,20 +94,14 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns a read/write reference to the value at the i-th
-			 *  element in the Queue.
-			 *  @param  offset  i
-			 *  @note  Runtime: O(n)
+			 *  @brief  Returns a read/write reference to the value of the last
+			 *  element on the Queue.
+			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
-			type& operator[](size_t offset)
+			type& back()
 			{
-				if (offset >= current_element_count) throw QueueErrors::INDEX_OUT_OF_BOUNDS;
-
-				QueueNode<type> *node = first;
-				for (size_t i = 0; i < offset; i++) node = node->next;
-
-				return node->value;
+				return last->value;
 			}
 
 			/**
@@ -106,6 +112,23 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			const type& operator[](size_t offset) const
+			{
+				if (offset >= current_element_count) throw QueueErrors::INDEX_OUT_OF_BOUNDS;
+
+				QueueNode<type> *node = first;
+				for (size_t i = 0; i < offset; i++) node = node->next;
+
+				return node->value;
+			}
+
+			/**
+			 *  @brief  Returns a read/write reference to the value at the i-th
+			 *  element in the Queue.
+			 *  @param  offset  i
+			 *  @note  Runtime: O(n)
+			 *  @note  Memory: O(1)
+			 */
+			type& operator[](size_t offset)
 			{
 				if (offset >= current_element_count) throw QueueErrors::INDEX_OUT_OF_BOUNDS;
 
@@ -214,6 +237,14 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Places a value to the end of the Queue.
+			 *  @param  value  A reference to the value to push.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			void operator+=(const type& value) { push(value); }
+
+			/**
 			 *  @brief  Places a value before at the start of the Queue.
 			 *  @param  value  A reference to the value to add to the Queue.
 			 *  @note  Runtime: O(1)
@@ -235,14 +266,6 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Places a value to the end of the Queue.
-			 *  @param  value  A reference to the value to push.
-			 *  @note  Runtime: O(1)
-			 *  @note  Memory: O(1)
-			 */
-			void operator+=(const type& value) { push(value); }
-
-			/**
 			 *  @brief  Places another Queue at the end of this Queue.
 			 *  The values will be transfered to this Queue, and the other
 			 *  Queue will be reset.
@@ -251,7 +274,7 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			void attach(Queue<type>& other_queue) {
-				if (this == &other_queue) return;
+				if (this == &other_queue) throw QueueErrors::ATTACH_QUEUE_TO_ITSELF;
 
 				if (other_queue.size()) {
 					last->next = other_queue.first;
