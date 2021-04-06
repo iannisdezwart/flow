@@ -16,18 +16,40 @@ namespace flow {
 	template <typename type>
 	class Buffer {
 		public:
-
 			// Abstract methods
 
 			/**
 			 *  @brief  Returns a pointer to the first element of the buffer.
 			 */
-			virtual type *begin() const = 0;
+			virtual type *data() const = 0;
 
 			/**
-			 *  @brief  Returns a pointer to the one after last element of the buffer.
+			 *  @brief  Returns a read-only reference to the first element of
+			 *  the buffer.
 			 */
-			virtual type *end() const = 0;
+			virtual const type& front() const = 0;
+
+			/**
+			 *  @brief  Returns a read/write reference to the first element of
+			 *  the buffer.
+			 */
+			virtual type& front() = 0;
+
+			/**
+			 *  @brief  Returns a read-only reference to the last element of
+			 *  the buffer.
+			 */
+			virtual const type& back() const = 0;
+
+			/**
+			 *  @brief  Returns a read/write reference to the last element of
+			 *  the buffer.
+			 */
+			virtual type& back() = 0;
+
+			/**
+			 *  @brief  Returns an Iterator to 
+			 */
 
 			/**
 			 *  @brief  Returns the number of elements on the buffer.
@@ -47,6 +69,179 @@ namespace flow {
 			 */
 			virtual void set_at_index(size_t index, type value) = 0;
 
+			// Iterators
+
+			template <bool Const = false>
+			class Iterator {
+				public:
+					Iterator(type *ptr) : ptr(ptr) {}
+
+					void operator=(const Iterator<Const>& other_iterator)
+					{
+						ptr = other_iterator.ptr;
+					}
+
+					const type& operator*() const
+					{
+						return *ptr;
+					}
+
+					template <bool T = true>
+					typename std::enable_if<T && !Const, type&>::type
+					/* type & */ operator*()
+					{
+						return *ptr;
+					}
+
+					type operator->()
+					{
+						return ptr;
+					}
+
+					Iterator& /* prefix */ operator++()
+					{
+						ptr++;
+						return *this;
+					}
+
+					Iterator /* postfix */ operator++(int)
+					{
+						Iterator old_it = *this;
+						ptr++;
+						return old_it;
+					}
+
+					Iterator& /* prefix */ operator--()
+					{
+						ptr--;
+						return *this;
+					}
+
+					Iterator /* postfix */ operator--(int)
+					{
+						Iterator old_it = *this;
+						ptr--;
+						return old_it;
+					}
+
+					void operator+=(size_t increment)
+					{
+						ptr += increment;
+					}
+
+					void operator-=(size_t decrement)
+					{
+						ptr -= decrement;
+					}
+
+					bool operator==(const Iterator<Const>& other)
+					{
+						return ptr == other.ptr;
+					}
+
+					bool operator!=(const Iterator<Const>& other)
+					{
+						return ptr != other.ptr;
+					}
+
+					bool operator<(const Iterator<Const>& other)
+					{
+						return ptr < other.ptr;
+					}
+
+					bool operator<=(const Iterator<Const>& other)
+					{
+						return ptr <= other.ptr;
+					}
+
+					bool operator>(const Iterator<Const>& other)
+					{
+						return ptr > other.ptr;
+					}
+
+					bool operator>=(const Iterator<Const>& other)
+					{
+						return ptr >= other.ptr;
+					}
+
+				private:
+					type *ptr;
+			};
+
+			/**
+			 *  @brief  Returns a read/write iterator that points to the first
+			 *  element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<false> begin()
+			{
+				return Iterator<false>(data());
+			}
+
+			/**
+			 *  @brief  Returns a read/write iterator that points to one past
+			 *  the last element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<false> end()
+			{
+				return Iterator<false>(data() + size());
+			}
+
+			/**
+			 *  @brief  Returns a reverse read/write iterator that points to the
+			 *  last element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<false> rbegin()
+			{
+				return Iterator<false>(data() + size() - 1);
+			}
+
+			/**
+			 *  @brief  Returns a reverse read/write iterator that points to one
+			 *  before the first element of the Buffer.
+			 *  Iteration is done in-order.
+			 */
+			Iterator<false> rend()
+			{
+				return Iterator<false>(data() - 1);
+			}
+
+			/**
+			 *  @brief  Returns a read-only iterator that points to the first
+			 *  element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<true> cbegin()
+			{
+				return Iterator<true>(data());
+			}
+
+			/**
+			 *  @brief  Returns a read-only iterator that points to one past
+			 *  the last element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<true> cend()
+			{
+				return Iterator<true>(data() + size());
+			}
+
+			/**
+			 *  @brief  Returns a reverse read-only iterator that points to the
+			 *  last element of the Buffer. Iteration is done in-order.
+			 */
+			Iterator<true> crbegin()
+			{
+				return Iterator<true>(data() + size() - 1);
+			}
+
+			/**
+			 *  @brief  Returns a reverse read-only iterator that points to one
+			 *  before the first element of the Buffer.
+			 *  Iteration is done in-order.
+			 */
+			Iterator<true> crend()
+			{
+				return Iterator<true>(data() - 1);
+			}
+
 			// Basic methods
 
 			/**
@@ -56,7 +251,7 @@ namespace flow {
 			void copy_from(const Buffer<type>& other_buffer)
 			{
 				size_t copy_size = sizeof(type) * other_buffer.size();
-				memcpy(begin(), other_buffer.begin(), copy_size);
+				memcpy(data(), other_buffer.data(), copy_size);
 			}
 
 			/**
@@ -84,8 +279,8 @@ namespace flow {
 				#endif
 
 				type value_1 = get_at_index(index_1);
-				*(begin() + index_1) = *(begin() + index_2);
-				*(begin() + index_2) = value_1;
+				*(data() + index_1) = *(data() + index_2);
+				*(data() + index_2) = value_1;
 			}
 
 			/**
@@ -95,7 +290,7 @@ namespace flow {
 			 */
 			void sort(std::function<bool (type, type)> compare_callback)
 			{
-				std::sort(begin(), end(), compare_callback);
+				std::sort(data(), data() + size(), compare_callback);
 			}
 
 			/**
