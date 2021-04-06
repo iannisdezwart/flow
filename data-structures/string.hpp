@@ -1665,17 +1665,36 @@ namespace flow {
 								size += std::max(num_size, pad_size);
 								goto end_specifier;
 
+							case 'c':
+							{
+								char c = va_arg(args, int);
+								size += 1;
+								goto end_specifier;
+							}
+
 							case 's':
 							{
 								const char *char_arr_arg = va_arg(args, const char *);
-								size += strlen(char_arr_arg);
+
+								if (precision_modifier_set) {
+									size += std::min(precision, strlen(char_arr_arg));
+								} else {
+									size += strlen(char_arr_arg);
+								}
+
 								goto end_specifier;
 							}
 
 							case 'S':
 							{
 								String& str_arg = va_arg(args, String);
-								size += str_arg.size();
+
+								if (precision_modifier_set) {
+									size += std::min(precision, str_arg.size());
+								} else {
+									size += str_arg.size();
+								}
+
 								goto end_specifier;
 							}
 
@@ -1977,14 +1996,26 @@ namespace flow {
 									}
 								}
 
+							case 'c':
+							{
+								char c = va_arg(args, int);
+								buf[buf_offset++] = c;
+
+								goto end_specifier_1;
+							}
+
 							case 's':
 							{
 								const char *c = va_arg(args, const char *);
-								size_t len = 0;
 
-								while (*c != '\0') {
-									buf[buf_offset++] = *c++;
-									len++;
+								if (precision_modifier_set) {
+									for (size_t i = 0; i < precision && *c != '\0'; i++) {
+										buf[buf_offset++] = *c++;
+									}
+								} else {
+									while (*c != '\0') {
+										buf[buf_offset++] = *c++;
+									}
 								}
 
 								goto end_specifier_1;
@@ -1994,6 +2025,10 @@ namespace flow {
 							{
 								String& str_arg = va_arg(args, String);
 								size_t str_size = str_arg.size();
+
+								if (precision_modifier_set)
+									str_size = std::min(str_size, precision);
+
 								memcpy(buf + buf_offset, str_arg.data(), str_size);
 								buf_offset += str_size;
 
@@ -2028,6 +2063,8 @@ namespace flow {
 
 							case '.':
 							{
+								precision_modifier_set = true;
+
 								flow_tools::UintFromStr num_and_len =
 									flow_tools::read_uint_from_str(fmt + i + 1);
 								i += num_and_len.len;
