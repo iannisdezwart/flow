@@ -2006,17 +2006,20 @@ namespace flow {
 
 							case 's':
 							{
-								const char *c = va_arg(args, const char *);
+								const char *str = va_arg(args, const char *);
+								size_t str_size = strlen(str);
 
-								if (precision_modifier_set) {
-									for (size_t i = 0; i < precision && *c != '\0'; i++) {
-										buf[buf_offset++] = *c++;
-									}
-								} else {
-									while (*c != '\0') {
-										buf[buf_offset++] = *c++;
-									}
-								}
+								if (precision_modifier_set)
+									str_size = std::min(str_size, precision);
+
+								ssize_t padding = pad_size - str_size;
+								padding = std::max(padding, (ssize_t) 0);
+
+								memset(buf + buf_offset, pad_char, padding);
+								buf_offset += padding;
+
+								memcpy(buf + buf_offset, str, str_size);
+								buf_offset += str_size;
 
 								goto end_specifier_1;
 							}
@@ -2028,6 +2031,12 @@ namespace flow {
 
 								if (precision_modifier_set)
 									str_size = std::min(str_size, precision);
+
+								ssize_t padding = pad_size - str_size;
+								padding = std::max(padding, (ssize_t) 0);
+
+								memset(buf + buf_offset, pad_char, padding);
+								buf_offset += padding;
 
 								memcpy(buf + buf_offset, str_arg.data(), str_size);
 								buf_offset += str_size;
