@@ -502,6 +502,18 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Swaps the values at two iterators of the LinkedList.
+			 *  @param  iterator_1  An iterator to the first element.
+			 *  @param  iterator_2  An iterator to the second element.
+			 */
+			void swap(Iterator& iterator_1, Iterator& iterator_2)
+			{
+				type temp = *iterator_1;
+				*iterator_1 = *iterator_2;
+				*iterator_2 = temp;
+			}
+
+			/**
 			 *  @brief  Inserts an element at the end of the LinkedList.
 			 *  @param  value  The value to place.
 			 *  @note  Runtime: O(1)
@@ -719,11 +731,56 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Inserts an element right after a given iterator.
+			 *  @param  it  The iterator to the value before the new value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && Doubly, void>::type
+			/* void */ insert(Iterator& it, const type& value)
+			{
+				LinkedListNode<type, true>& prev_node = it.get_node();
+				LinkedListNode<type, true> *next_node = prev_node.next;
+
+				LinkedListNode<type, true> *new_node =
+					new LinkedListNode<type, true>(value);
+
+				prev_node.next = new_node;
+				new_node->next = next_node;
+				new_node->prev = &prev_node;
+				if (next_node != NULL) next_node->prev = new_node;
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element right after a given iterator.
+			 *  @param  it  The iterator to the value before the new value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && !Doubly, void>::type
+			/* void */ insert(Iterator& it, const type& value)
+			{
+				LinkedListNode<type, false>& prev_node = it.get_node();
+				LinkedListNode<type, false> *next_node = prev_node.next;
+
+				prev_node.next = new LinkedListNode<type, false>(value);
+				prev_node.next->next = next_node;
+
+				this->cur_size++;
+			}
+
+			/**
 			 *  @brief  Deletes an element at a specific index of the LinkedList.
 			 *  The element after the deleted element will be placed right after
 			 *  the element before the deleted element.
 			 *  @param  i  The index at which to delete the value.
-			 *  @returns  The value of the deleted element
+			 *  @returns  The value of the deleted element.
 			 *  @note  Runtime: O(n)
 			 *  @note  Memory: O(1)
 			 */
@@ -742,6 +799,32 @@ namespace flow {
 				delete prev_node.next;
 				this->cur_size--;
 				prev_node.next = next_node;
+
+				return value;
+			}
+
+			/**
+			 *  @brief  Deletes an element pointed by an iterator.
+			 *  The element after the deleted element will be placed right after
+			 *  the element before the deleted element.
+			 *  @param  it  An iterator to the element to delete.
+			 *  @returns  The value of the deleted element.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && Doubly, type>::type
+			/* type */ remove(Iterator& it)
+			{
+				LinkedListNode<type, true>& node = it.get_node();
+
+				if (node.prev == NULL) return extract_front();
+				if (node.next == NULL) return extract_rear();
+
+				type value = node.value;
+
+				node.prev->next = node.next;
+				node.next->prev = node.prev;
 
 				return value;
 			}
