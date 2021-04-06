@@ -15,6 +15,16 @@ namespace flow {
 			NodeListIterator(NodeType *node)
 				: node(node) {}
 
+			NodeType& get_node()
+			{
+				return *node;
+			}
+
+			NodeType *get_node_pointer()
+			{
+				return node;
+			}
+
 			void operator=(const Iterator& other_iterator)
 			{
 				node = other_iterator.node;
@@ -32,7 +42,7 @@ namespace flow {
 				return node->value;
 			}
 
-			type operator->()
+			type *operator->()
 			{
 				return &(node->value);
 			}

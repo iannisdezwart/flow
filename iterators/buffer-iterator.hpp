@@ -29,7 +29,7 @@ namespace flow {
 				return *ptr;
 			}
 
-			type operator->()
+			type *operator->()
 			{
 				return ptr;
 			}

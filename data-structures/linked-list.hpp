@@ -193,7 +193,7 @@ namespace flow {
 				LinkedListNode<type, Doubly>, true, Doubly>;
 
 			/**
-			 *  @brief  Returns an read/write iterator that points to the first
+			 *  @brief  Returns a read/write iterator that points to the first
 			 *  element of the LinkedList. Iteration is done in-order.
 			 */
 			Iterator begin()
@@ -202,7 +202,7 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns an read/write iterator that points to one past
+			 *  @brief  Returns a read/write iterator that points to one past
 			 *  the last element of the LinkedList. Iteration is done in-order.
 			 */
 			Iterator end()
@@ -234,7 +234,7 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns an read-only iterator that points to the first
+			 *  @brief  Returns a read-only iterator that points to the first
 			 *  element of the LinkedList. Iteration is done in-order.
 			 */
 			ConstIterator cbegin()
@@ -243,7 +243,7 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns an read-only iterator that points to one past
+			 *  @brief  Returns a read-only iterator that points to one past
 			 *  the last element of the LinkedList. Iteration is done in-order.
 			 */
 			ConstIterator cend()
