@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 
 #include "dynamic-array.hpp"
+#include "../iterators/node-list-iterator.hpp"
 
 namespace flow_queue_tools {
 	template <typename type>
@@ -104,6 +105,54 @@ namespace flow {
 			type& back()
 			{
 				return last->value;
+			}
+
+			/**
+			 *  @brief  Read/write iterator for the data in the LinkedList nodes.
+			 *  Iteration is done in-order.
+			 */
+			using Iterator = NodeListIterator<type, QueueNode<type>, false, false>;
+
+			/**
+			 *  @brief  Read-only iterator for the data in the LinkedList nodes.
+			 *  Iteration is done in-order.
+			 */
+			using ConstIterator = NodeListIterator<type, QueueNode<type>, true, false>;
+
+			/**
+			 *  @brief  Returns an read/write iterator that points to the first
+			 *  element of the Queue. Iteration is done in-order.
+			 */
+			Iterator begin()
+			{
+				return Iterator(first);
+			}
+
+			/**
+			 *  @brief  Returns an read/write iterator that points to one past
+			 *  the last element of the Queue. Iteration is done in-order.
+			 */
+			Iterator end()
+			{
+				return Iterator(NULL);
+			}
+
+			/**
+			 *  @brief  Returns an read-only iterator that points to the first
+			 *  element of the Queue. Iteration is done in-order.
+			 */
+			ConstIterator cbegin()
+			{
+				return ConstIterator(first);
+			}
+
+			/**
+			 *  @brief  Returns an read-only iterator that points to one past
+			 *  the last element of the Queue. Iteration is done in-order.
+			 */
+			ConstIterator cend()
+			{
+				return ConstIterator(NULL);
 			}
 
 			/**

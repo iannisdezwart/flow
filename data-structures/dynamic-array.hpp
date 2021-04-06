@@ -163,19 +163,47 @@ namespace flow {
 			// Abstract method implementations
 
 			/**
-			 *  @brief  Returns a pointer to the first element of the DynamicArray.
+			 *  @brief  Returns a pointer to the first element of the buffer.
 			 */
-			type *begin() const
+			type *data() const
 			{
 				return buffer;
 			}
 
 			/**
-			 *  @brief  Returns a pointer to the one after last element of the DynamicArray.
+			 *  @brief  Returns a read-only reference to the first element of
+			 *  the buffer.
 			 */
-			type *end() const
+			const type& front() const
 			{
-				return buffer + current_element_count;
+				return *buffer;
+			}
+
+			/**
+			 *  @brief  Returns a read/write reference to the first element of
+			 *  the buffer.
+			 */
+			type& front()
+			{
+				return *buffer;
+			}
+
+			/**
+			 *  @brief  Returns a read-only reference to the last element of
+			 *  the buffer.
+			 */
+			const type& back() const
+			{
+				return *(buffer + current_element_count);
+			}
+
+			/**
+			 *  @brief  Returns a read-only reference to the last element of
+			 *  the buffer.
+			 */
+			type& back()
+			{
+				return *(buffer + current_element_count);
 			}
 
 			/**

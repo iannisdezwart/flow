@@ -40,12 +40,12 @@ namespace flow {
 
 		ssize_t read(int socket_fd, String& dest)
 		{
-			return read(socket_fd, dest.begin(), dest.current_capacity());
+			return read(socket_fd, dest.data(), dest.current_capacity());
 		}
 
 		ssize_t write(int socket_fd, const String& src)
 		{
-			return write(socket_fd, src.begin(), src.size());
+			return write(socket_fd, src.data(), src.size());
 		}
 
 		int set_nonblocking(int fd)

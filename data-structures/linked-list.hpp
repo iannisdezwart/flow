@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 
 #include "dynamic-array.hpp"
+#include "../iterators/node-list-iterator.hpp"
 
 namespace flow_linked_list_tools {
 	template <typename type, bool Doubly>
@@ -177,94 +178,36 @@ namespace flow {
 			 */
 			size_t size() const { return this->cur_size; }
 
-			template <bool Const = false>
-			class Iterator {
-				public:
-					Iterator(LinkedListNode<type, Doubly> *node)
-						: node(node) {}
+			/**
+			 *  @brief  Read/write iterator for the data in the LinkedList nodes.
+			 *  Iteration is done in-order.
+			 */
+			using Iterator = NodeListIterator<type,
+				LinkedListNode<type, Doubly>, false, Doubly>;
 
-					void operator=(const Iterator<Const>& other_iterator)
-					{
-						node = other_iterator.node;
-					}
-
-					const type& operator*() const
-					{
-						return node->value;
-					}
-
-					template <bool T = true>
-					typename std::enable_if<T && !Const, type &>::type
-					/* type& */ operator*()
-					{
-						return node->value;
-					}
-
-					type operator->()
-					{
-						return &(node->value);
-					}
-
-					Iterator& /* prefix */ operator++()
-					{
-						node = node->next;
-						return *this;
-					}
-
-					Iterator /* postfix */ operator++(int)
-					{
-						Iterator old_it = *this;
-						node = node->next;
-						return old_it;
-					}
-
-					template <bool T = true>
-					typename std::enable_if<T && Doubly, Iterator>::type
-					/* Iterator */ /* prefix */ operator--()
-					{
-						node = node->prev;
-						return *this;
-					}
-
-					template <bool T = true>
-					typename std::enable_if<T && Doubly, Iterator>::type
-					/* Iterator */ /* postfix */ operator--(int)
-					{
-						Iterator old_it = *this;
-						node = node->prev;
-						return old_it;
-					}
-
-					bool operator==(const Iterator& other)
-					{
-						return node == other.node;
-					}
-
-					bool operator!=(const Iterator& other)
-					{
-						return node != other.node;
-					}
-
-				private:
-					LinkedListNode<type, Doubly> *node;
-			};
+			/**
+			 *  @brief  Read-only iterator for the data in the LinkedList nodes.
+			 *  Iteration is done in-order.
+			 */
+			using ConstIterator = NodeListIterator<type,
+				LinkedListNode<type, Doubly>, true, Doubly>;
 
 			/**
 			 *  @brief  Returns an read/write iterator that points to the first
 			 *  element of the LinkedList. Iteration is done in-order.
 			 */
-			Iterator<false> begin()
+			Iterator begin()
 			{
-				return Iterator<false>(this->head);
+				return Iterator(this->head);
 			}
 
 			/**
 			 *  @brief  Returns an read/write iterator that points to one past
 			 *  the last element of the LinkedList. Iteration is done in-order.
 			 */
-			Iterator<false> end()
+			Iterator end()
 			{
-				return Iterator<false>(NULL);
+				return Iterator(NULL);
 			}
 
 			/**
@@ -272,10 +215,10 @@ namespace flow {
 			 *  last element of the LinkedList. Iteration is done in-order.
 			 */
 			template <bool T = true>
-			typename std::enable_if<T && Doubly, Iterator<false>>::type
-			/* Iterator<false> */ rbegin()
+			typename std::enable_if<T && Doubly, Iterator>::type
+			/* Iterator */ rbegin()
 			{
-				return Iterator<false>(this->tail);
+				return Iterator(this->tail);
 			}
 
 			/**
@@ -284,28 +227,28 @@ namespace flow {
 			 *  Iteration is done in-order.
 			 */
 			template <bool T = true>
-			typename std::enable_if<T && Doubly, Iterator<false>>::type
-			/* Iterator<false> */ rend()
+			typename std::enable_if<T && Doubly, Iterator>::type
+			/* Iterator */ rend()
 			{
-				return Iterator<false>(NULL);
+				return Iterator(NULL);
 			}
 
 			/**
 			 *  @brief  Returns an read-only iterator that points to the first
 			 *  element of the LinkedList. Iteration is done in-order.
 			 */
-			Iterator<true> cbegin()
+			ConstIterator cbegin()
 			{
-				return Iterator<true>(this->head);
+				return ConstIterator(this->head);
 			}
 
 			/**
 			 *  @brief  Returns an read-only iterator that points to one past
 			 *  the last element of the LinkedList. Iteration is done in-order.
 			 */
-			Iterator<true> cend()
+			ConstIterator cend()
 			{
-				return Iterator<true>(NULL);
+				return ConstIterator(NULL);
 			}
 
 			/**
@@ -313,10 +256,10 @@ namespace flow {
 			 *  last element of the LinkedList. Iteration is done in-order.
 			 */
 			template <bool T = true>
-			typename std::enable_if<T && Doubly, Iterator<true>>::type
-			/* Iterator<true> */ crbegin()
+			typename std::enable_if<T && Doubly, ConstIterator>::type
+			/* ConstIterator */ crbegin()
 			{
-				return Iterator<true>(this->tail);
+				return ConstIterator(this->tail);
 			}
 
 			/**
@@ -325,10 +268,10 @@ namespace flow {
 			 *  Iteration is done in-order.
 			 */
 			template <bool T = true>
-			typename std::enable_if<T && Doubly, Iterator<true>>::type
-			/* Iterator<true> */ crend()
+			typename std::enable_if<T && Doubly, ConstIterator>::type
+			/* ConstIterator */ crend()
 			{
-				return Iterator<true>(NULL);
+				return ConstIterator(NULL);
 			}
 
 			/**

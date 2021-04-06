@@ -108,7 +108,7 @@ namespace flow {
 			{
 				append('\0');
 				unsafe_decrement_element_count(1);
-				return begin();
+				return data();
 			}
 
 			/**
@@ -1785,7 +1785,7 @@ namespace flow {
 				va_start(args, fmt);
 
 				i = 0;
-				char *buf = str.begin();
+				char *buf = str.data();
 				size_t buf_offset = 0;
 
 				while (fmt[i] != '\0') {
@@ -1994,7 +1994,7 @@ namespace flow {
 							{
 								String& str_arg = va_arg(args, String);
 								size_t str_size = str_arg.size();
-								memcpy(buf + buf_offset, str_arg.begin(), str_size);
+								memcpy(buf + buf_offset, str_arg.data(), str_size);
 								buf_offset += str_size;
 
 								goto end_specifier_1;

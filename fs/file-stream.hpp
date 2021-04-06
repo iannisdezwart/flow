@@ -72,7 +72,7 @@ namespace flow {
 				if (Mode == FileMode::WRITE || Mode == FileMode::APPEND) {
 					write_stream.on_data([this](String& str) {
 						bytes_written += str.size();
-						std::fwrite(str.begin(), 1, str.size(), file);
+						std::fwrite(str.data(), 1, str.size(), file);
 					});
 
 					write_stream.start();
@@ -124,7 +124,7 @@ namespace flow {
 				// Read a chunk
 
 				String chunk = String::alloc(size);
-				size_t n = std::fread(chunk.begin(), 1, size, file);
+				size_t n = std::fread(chunk.data(), 1, size, file);
 				chunk.unsafe_set_element_count(n);
 
 				// Write the chunk to the read_stream

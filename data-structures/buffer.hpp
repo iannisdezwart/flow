@@ -3,6 +3,8 @@
 
 #include <bits/stdc++.h>
 
+#include "../iterators/buffer-iterator.hpp"
+
 namespace flow {
 	namespace BufferErrors {
 		enum BufferErrors {
@@ -71,128 +73,43 @@ namespace flow {
 
 			// Iterators
 
-			template <bool Const = false>
-			class Iterator {
-				public:
-					Iterator(type *ptr) : ptr(ptr) {}
+			/**
+			 *  @brief  Read/write iterator for the data on the internal buffer.
+			 *  Iteration is done in-order.
+			 */
+			using Iterator = BufferIterator<type, false>;
 
-					void operator=(const Iterator<Const>& other_iterator)
-					{
-						ptr = other_iterator.ptr;
-					}
-
-					const type& operator*() const
-					{
-						return *ptr;
-					}
-
-					template <bool T = true>
-					typename std::enable_if<T && !Const, type&>::type
-					/* type & */ operator*()
-					{
-						return *ptr;
-					}
-
-					type operator->()
-					{
-						return ptr;
-					}
-
-					Iterator& /* prefix */ operator++()
-					{
-						ptr++;
-						return *this;
-					}
-
-					Iterator /* postfix */ operator++(int)
-					{
-						Iterator old_it = *this;
-						ptr++;
-						return old_it;
-					}
-
-					Iterator& /* prefix */ operator--()
-					{
-						ptr--;
-						return *this;
-					}
-
-					Iterator /* postfix */ operator--(int)
-					{
-						Iterator old_it = *this;
-						ptr--;
-						return old_it;
-					}
-
-					void operator+=(size_t increment)
-					{
-						ptr += increment;
-					}
-
-					void operator-=(size_t decrement)
-					{
-						ptr -= decrement;
-					}
-
-					bool operator==(const Iterator<Const>& other)
-					{
-						return ptr == other.ptr;
-					}
-
-					bool operator!=(const Iterator<Const>& other)
-					{
-						return ptr != other.ptr;
-					}
-
-					bool operator<(const Iterator<Const>& other)
-					{
-						return ptr < other.ptr;
-					}
-
-					bool operator<=(const Iterator<Const>& other)
-					{
-						return ptr <= other.ptr;
-					}
-
-					bool operator>(const Iterator<Const>& other)
-					{
-						return ptr > other.ptr;
-					}
-
-					bool operator>=(const Iterator<Const>& other)
-					{
-						return ptr >= other.ptr;
-					}
-
-				private:
-					type *ptr;
-			};
+			/**
+			 *  @brief  Read-only iterator for the data on the internal buffer.
+			 *  Iteration is done in-order.
+			 */
+			using ConstIterator = BufferIterator<type, true>;
 
 			/**
 			 *  @brief  Returns a read/write iterator that points to the first
 			 *  element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<false> begin()
+			Iterator begin()
 			{
-				return Iterator<false>(data());
+				return Iterator(data());
 			}
 
 			/**
 			 *  @brief  Returns a read/write iterator that points to one past
 			 *  the last element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<false> end()
+			Iterator end()
 			{
-				return Iterator<false>(data() + size());
+				return Iterator(data() + size());
 			}
 
 			/**
 			 *  @brief  Returns a reverse read/write iterator that points to the
 			 *  last element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<false> rbegin()
+			Iterator rbegin()
 			{
-				return Iterator<false>(data() + size() - 1);
+				return Iterator(data() + size() - 1);
 			}
 
 			/**
@@ -200,36 +117,36 @@ namespace flow {
 			 *  before the first element of the Buffer.
 			 *  Iteration is done in-order.
 			 */
-			Iterator<false> rend()
+			Iterator rend()
 			{
-				return Iterator<false>(data() - 1);
+				return Iterator(data() - 1);
 			}
 
 			/**
 			 *  @brief  Returns a read-only iterator that points to the first
 			 *  element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<true> cbegin()
+			ConstIterator cbegin()
 			{
-				return Iterator<true>(data());
+				return ConstIterator(data());
 			}
 
 			/**
 			 *  @brief  Returns a read-only iterator that points to one past
 			 *  the last element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<true> cend()
+			ConstIterator cend()
 			{
-				return Iterator<true>(data() + size());
+				return ConstIterator(data() + size());
 			}
 
 			/**
 			 *  @brief  Returns a reverse read-only iterator that points to the
 			 *  last element of the Buffer. Iteration is done in-order.
 			 */
-			Iterator<true> crbegin()
+			ConstIterator crbegin()
 			{
-				return Iterator<true>(data() + size() - 1);
+				return ConstIterator(data() + size() - 1);
 			}
 
 			/**
@@ -237,9 +154,9 @@ namespace flow {
 			 *  before the first element of the Buffer.
 			 *  Iteration is done in-order.
 			 */
-			Iterator<true> crend()
+			ConstIterator crend()
 			{
-				return Iterator<true>(data() - 1);
+				return ConstIterator(data() - 1);
 			}
 
 			// Basic methods
