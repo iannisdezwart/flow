@@ -8,6 +8,8 @@
 #include "linked-list.hpp"
 
 namespace flow_hash_map_tools {
+	using namespace flow;
+
 	template <typename Key, typename Value>
 	class KeyValuePair {
 		public:
@@ -20,56 +22,44 @@ namespace flow_hash_map_tools {
 	enum class HashMapErrors {
 		KEY_NOT_FOUND
 	};
-};
 
-namespace flow {
-	using namespace flow_hash_map_tools;
-
-	/**
-	 *  @brief  HashMap implementation. Lookups, insertion and updating
-	 *  takes O(1) on average.
-	 */
 	template <typename Key, typename Value>
-	class HashMap {
+	class HashMapTable {
 		public:
 			typedef KeyValuePair<Key, Value> Entry;
 
-		private:
-			DoublyLinkedList<Entry>& get_list_of_key(const Key& key)
+			size_t cur_size = 0;
+			DynamicArray<DoublyLinkedList<Entry *>> *table;
+
+			HashMapTable(size_t table_size)
+				: table(new DynamicArray<DoublyLinkedList<Entry *>>(table_size))
 			{
-				struct std::hash<Key> hash_func;
-				size_t index = hash_func(key) % table.size();
-				return table[index];
+				table->unsafe_set_element_count(table->current_capacity());
 			}
 
-			Value& get_by_key(const Key& key)
+			void destroy_entries()
 			{
-				DoublyLinkedList<Entry>& list = get_list_of_key(key);
+				for (size_t i = 0; i < table->size(); i++) {
+					DoublyLinkedList<Entry *>& list = table->operator[](i);
 
-				for (const Entry& entry : list) {
-					if (entry.key == key) {
-						return entry.value;
+					for (Entry *entry : list) {
+						delete entry;
 					}
 				}
-
-				throw HashMapErrors::KEY_NOT_FOUND;
 			}
 
-			/*
-				[ 1, 2, 3 ],    <--- (2)
-				[ 4 ],          <--- (1)
-				[ ],            <--- (0)
-				[ 5, 6 ],
-				[ ],
-				[ 7 ]
-			*/
+			void operator=(const HashMapTable<Key, Value>& other_hashmap_table)
+			{
+				cur_size = other_hashmap_table.cur_size;
+				table = other_hashmap_table.table;
+			}
 
 			template <bool Const = false>
 			class IteratorBase {
 				private:
-					DynamicArray<DoublyLinkedList<Entry>>& table;
+					DynamicArray<DoublyLinkedList<Entry *>>& table;
 					size_t list_index;
-					typename DoublyLinkedList<Entry>::Iterator list_it;
+					typename DoublyLinkedList<Entry *>::Iterator list_it;
 
 					void hook_to_next_node()
 					{
@@ -90,7 +80,7 @@ namespace flow {
 
 				public:
 					IteratorBase(
-						DynamicArray<DoublyLinkedList<Entry>>& table,
+						DynamicArray<DoublyLinkedList<Entry *>>& table,
 						size_t list_index
 					) : table(table), list_index(list_index), list_it(NULL)
 					{
@@ -103,7 +93,7 @@ namespace flow {
 						return list_index;
 					}
 
-					typename DoublyLinkedList<Entry>::Iterator& get_list_it()
+					typename DoublyLinkedList<Entry *>::Iterator& get_list_it()
 					{
 						return list_it;
 					}
@@ -116,14 +106,14 @@ namespace flow {
 
 					const Entry& operator*() const
 					{
-						return *list_it;
+						return **list_it;
 					}
 
 					template <bool T = true>
 					typename std::enable_if<T && !Const, Entry&>::type
 					/* Entry& */ operator*()
 					{
-						return *list_it;
+						return **list_it;
 					}
 
 					IteratorBase& /* prefix */ operator++()
@@ -162,32 +152,197 @@ namespace flow {
 					}
 			};
 
+			using Iterator = IteratorBase<false>;
+			using ConstIterator = IteratorBase<true>;
+
+			Iterator begin()
+			{
+				return Iterator(*table, 0);
+			}
+
+			Iterator end()
+			{
+				return Iterator(*table, table->size());
+			}
+
+			ConstIterator cbegin()
+			{
+				return ConstIterator(*table, 0);
+			}
+
+			ConstIterator cend()
+			{
+				return ConstIterator(*table, table->size());
+			}
+
+			DoublyLinkedList<Entry *>& get_list_of_key(const Key& key)
+			{
+				struct std::hash<Key> hash_func;
+				size_t index = hash_func(key) & table->size() - 1;
+				return table->operator[](index);
+			}
+
+			Value& get_by_key(const Key& key)
+			{
+				DoublyLinkedList<Entry *>& list = get_list_of_key();
+
+				for (const Entry *entry : list) {
+					if (entry->key == key) return entry->value;
+				}
+
+				throw HashMapErrors::KEY_NOT_FOUND;
+			}
+
+			double avg_list_size()
+			{
+				return (double) cur_size / (double) table->size();
+			}
+
+			bool insert(const Key& key, const Value& value)
+			{
+				DoublyLinkedList<Entry *>& list = get_list_of_key(key);
+
+				for (Entry *entry : list) {
+					if (entry->key == key) {
+						entry->value = value;
+						return false;
+					}
+				}
+
+				cur_size++;
+				list.append(new Entry(key, value));
+				return false;
+			}
+
+			bool remove(const Key& key)
+			{
+				DoublyLinkedList<Entry *>& list = get_list_of_key(key);
+
+				typename DoublyLinkedList<Entry *>::Iterator it = list.begin();
+				typename DoublyLinkedList<Entry *>::Iterator end = list.end();
+
+				while (it != end) {
+					if (it->key == key) {
+						delete *it;
+						list.remove(it);
+						cur_size--;
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			void print()
+			{
+				for (size_t i = 0; i < table->size(); i++) {
+					DoublyLinkedList<Entry *>& list = table->operator[](i);
+
+					String::format("=== Bucket %llu (%llu) ===",
+						i, list.size()).print();
+
+					for (Entry *entry : list) {
+						String::format("%lld -> %lld", entry->key, entry->value).print();
+					}
+				}
+			}
+	};
+};
+
+namespace flow {
+	using namespace flow_hash_map_tools;
+
+	/**
+	 *  @brief  HashMap implementation. Lookups, insertion and updating
+	 *  takes O(1) on average.
+	 */
+	template <typename Key, typename Value>
+	class HashMap {
+		public:
+			typedef KeyValuePair<Key, Value> Entry;
+			constexpr static const size_t MIN_TABLE_SIZE = 16;
+			constexpr static const double MIN_ALPHA = 0.3;
+			constexpr static const double MAX_ALPHA = 1.0;
+
 		protected:
-			size_t cur_size;
-			DynamicArray<DoublyLinkedList<Entry>> table;
+			HashMapTable<Key, Value> table;
+
+		private:
+			DoublyLinkedList<Entry *>& get_list_of_key(const Key& key)
+			{
+				return table.get_by_key(key);
+			}
+
+			double avg_list_size()
+			{
+				return table.avg_list_size();
+			}
+
+			void grow()
+			{
+				HashMapTable<Key, Value> new_table(table.table->size() << 1);
+
+				for (const Entry& entry : table) {
+					new_table.insert(entry.key, entry.value);
+				}
+
+				table = new_table;
+			}
+
+			void shrink()
+			{
+				HashMapTable<Key, Value> new_table(table.table->size() >> 1);
+
+				for (const Entry& entry : table) {
+					new_table.insert(entry.key, entry.value);
+				}
+
+				table = new_table;
+			}
 
 		public:
-			HashMap(size_t init_table_size = 16)
-				: cur_size(0), table(init_table_size)
-			{
-				table.unsafe_set_element_count(init_table_size);
+			/**
+			 *  @brief  Creates a HashMap of a given initial table size.
+			 *  @param  init_table_size  The initial table size.
+			 */
+			HashMap(size_t init_table_size = 16) : table(init_table_size) {}
 
-				for (size_t i = 0; i < table.size(); i++) {
-					table[i] = DoublyLinkedList<Entry>();
-				}
+			/**
+			 *  @brief  Destroys the elements stored in this HashMap.
+			 */
+			~HashMap()
+			{
+				table.destroy_entries();
+			}
+
+			/**
+			 *  @brief  Copies the values of another HashMap into this HashMap.
+			 *  All existing elements are removed.
+			 */
+			void operator=(const HashMap<Key, Value>& other_hashmap)
+			{
+				table = other_hashmap.table;
+			}
+
+			/**
+			 *  @brief  Returns the current amount of elements on the HashMap.
+			 */
+			size_t size() const
+			{
+				return table.cur_size;
 			}
 
 			/**
 			 *  @brief  Read/write iterator for the data in the HashMap.
 			 *  Iteration order is undefined.
 			 */
-			using Iterator = IteratorBase<false>;
+			using Iterator = typename HashMapTable<Key, Value>::Iterator;
 
 			/**
 			 *  @brief  Read-only iterator for the data in the HashMap.
 			 *  Iteration order is undefined.
 			 */
-			using ConstIterator = IteratorBase<true>;
+			using ConstIterator = typename HashMapTable<Key, Value>::ConstIterator;
 
 			/**
 			 *  @brief  Returns a read/write iterator that points to the first
@@ -195,7 +350,7 @@ namespace flow {
 			 */
 			Iterator begin()
 			{
-				return Iterator(table, 0);
+				return table.begin();
 			}
 
 			/**
@@ -204,7 +359,25 @@ namespace flow {
 			 */
 			Iterator end()
 			{
-				return Iterator(table, table.size());
+				return table.end();
+			}
+
+			/**
+			 *  @brief  Returns a read-only iterator that points to the first
+			 *  element of the HashMap. Iteration order is undefined.
+			 */
+			ConstIterator cbegin()
+			{
+				return table.cbegin();
+			}
+
+			/**
+			 *  @brief  Returns a read-only iterator that points to one past
+			 *  the last element of the HashMap. Iteration order is undefined.
+			 */
+			ConstIterator cend()
+			{
+				return table.cend();
 			}
 
 			/**
@@ -214,7 +387,7 @@ namespace flow {
 			 */
 			const Value& operator[](const Key& key) const
 			{
-				return get_by_key(key);
+				return table.get_by_key(key);
 			}
 
 			/**
@@ -224,7 +397,7 @@ namespace flow {
 			 */
 			Value& operator[](const Key& key)
 			{
-				return get_by_key(key);
+				return table.get_by_key(key);
 			}
 
 			/**
@@ -232,7 +405,7 @@ namespace flow {
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
-			bool has_key(const Key& key)
+			bool has_key(const Key& key) const
 			{
 				DoublyLinkedList<Entry>& list = get_list_of_key(key);
 
@@ -253,17 +426,9 @@ namespace flow {
 			 */
 			bool insert(const Key& key, const Value& value)
 			{
-				DoublyLinkedList<Entry>& list = get_list_of_key(key);
+				if (avg_list_size() >= HashMap::MAX_ALPHA) grow();
 
-				for (Entry& entry : list) {
-					if (entry.key == key) {
-						entry.value = value;
-						return false;
-					}
-				}
-
-				list.append(KeyValuePair<Key, Value>(key, value));
-				return true;
+				return table.insert(key, value);
 			}
 
 			/**
@@ -275,18 +440,10 @@ namespace flow {
 			 */
 			bool remove(const Key& key)
 			{
-				DoublyLinkedList<Entry>& list = get_list_of_key(key);
-				typename DoublyLinkedList<Entry>::Iterator it = list.begin();
-				typename DoublyLinkedList<Entry>::Iterator end = list.end();
+				if (avg_list_size() <= HashMap::MIN_ALPHA
+					&& (table.size() >> 1) > HashMap::MIN_TABLE_SIZE) shrink();
 
-				while (it != end) {
-					if (it->key == key) {
-						list.remove(it);
-						return true;
-					}
-				}
-
-				return false;
+				return table.remove(key);
 			}
 
 			/**
@@ -294,16 +451,7 @@ namespace flow {
 			 */
 			void print()
 			{
-				for (size_t i = 0; i < table.size(); i++) {
-					DoublyLinkedList<Entry>& list = table[i];
-
-					String::format("=== Bucket %llu (%llu) ===",
-						i, list.size()).print();
-
-					for (const Entry& entry : list) {
-						String::format("%lld -> %lld", entry.key, entry.value).print();
-					}
-				}
+				table.print();
 			}
 	};
 };
