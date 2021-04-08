@@ -15,8 +15,9 @@ namespace flow {
 			BufferIterator<type, Const>& operator=(
 				const BufferIterator<type, Const>& other_iterator
 			) {
-				ptr = other_iterator.ptr;
+				if (this == &other_iterator) return *this;
 
+				ptr = other_iterator.ptr;
 				return *this;
 			}
 

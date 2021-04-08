@@ -51,6 +51,8 @@ namespace flow_hash_map_tools {
 			HashMapTable<Key, Value>& operator=(
 				const HashMapTable<Key, Value>& other_hashmap_table
 			) {
+				if (this == &other_hashmap_table) return *this;
+
 				cur_size = other_hashmap_table.cur_size;
 				table = other_hashmap_table.table;
 
@@ -103,6 +105,8 @@ namespace flow_hash_map_tools {
 
 					IteratorBase<Const>& operator=(const IteratorBase<Const>& other_iterator)
 					{
+						if (this == &other_iterator) return *this;
+
 						list_index = other_iterator.list_index;
 						list_it = other_iterator.list_it;
 
@@ -313,7 +317,7 @@ namespace flow {
 			HashMap(size_t init_table_size = 16) : table(init_table_size) {}
 
 			/**
-			 *  @brief  Destroys the elements stored in this HashMap.
+			 *  @brief  Destroys the entries stored in this HashMap.
 			 */
 			~HashMap()
 			{
@@ -321,17 +325,19 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Copies the values of another HashMap into this HashMap.
-			 *  All existing elements are removed.
+			 *  @brief  Copies the entries of another HashMap into this HashMap.
+			 *  All existing entries are removed.
 			 */
 			HashMap<Key, Value>& operator=(const HashMap<Key, Value>& other_hashmap)
 			{
+				if (this == &other_hashmap) return *this;
+
 				table = other_hashmap.table;
 				return *this;
 			}
 
 			/**
-			 *  @brief  Returns the current amount of elements on the HashMap.
+			 *  @brief  Returns the current number of entries on the HashMap.
 			 */
 			size_t size() const
 			{
@@ -339,20 +345,20 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Read/write iterator for the data in the HashMap.
+			 *  @brief  Read/write iterator for the entries in the HashMap.
 			 *  Iteration order is undefined.
 			 */
 			using Iterator = typename HashMapTable<Key, Value>::Iterator;
 
 			/**
-			 *  @brief  Read-only iterator for the data in the HashMap.
+			 *  @brief  Read-only iterator for the entries in the HashMap.
 			 *  Iteration order is undefined.
 			 */
 			using ConstIterator = typename HashMapTable<Key, Value>::ConstIterator;
 
 			/**
 			 *  @brief  Returns a read/write iterator that points to the first
-			 *  element of the HashMap. Iteration order is undefined.
+			 *  entry of the HashMap. Iteration order is undefined.
 			 */
 			Iterator begin()
 			{
@@ -361,7 +367,7 @@ namespace flow {
 
 			/**
 			 *  @brief  Returns a read/write iterator that points to one past
-			 *  the last element of the HashMap. Iteration order is undefined.
+			 *  the last entry of the HashMap. Iteration order is undefined.
 			 */
 			Iterator end()
 			{
@@ -370,7 +376,7 @@ namespace flow {
 
 			/**
 			 *  @brief  Returns a read-only iterator that points to the first
-			 *  element of the HashMap. Iteration order is undefined.
+			 *  entry of the HashMap. Iteration order is undefined.
 			 */
 			ConstIterator cbegin()
 			{
@@ -379,7 +385,7 @@ namespace flow {
 
 			/**
 			 *  @brief  Returns a read-only iterator that points to one past
-			 *  the last element of the HashMap. Iteration order is undefined.
+			 *  the last entry of the HashMap. Iteration order is undefined.
 			 */
 			ConstIterator cend()
 			{
@@ -387,7 +393,7 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns a read-only reference to a value in the HashMap.
+			 *  @brief  Returns a read-only reference to an entry in the HashMap.
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
@@ -397,7 +403,7 @@ namespace flow {
 			}
 
 			/**
-			 *  @brief  Returns a read/write reference to a value in the HashMap.
+			 *  @brief  Returns a read/write reference to an entry in the HashMap.
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */

@@ -27,6 +27,8 @@ namespace flow {
 
 			Iterator& operator=(const Iterator& other_iterator)
 			{
+				if (this == &other_iterator) return *this;
+
 				node = other_iterator.node;
 				return *this;
 			}

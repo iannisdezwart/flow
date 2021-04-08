@@ -70,6 +70,8 @@ namespace flow {
 			 */
 			String& operator=(const String& new_value)
 			{
+				if (this == &new_value) return *this;
+
 				size_t new_size = new_value.size();
 
 				reset(new_size); // Sets current_element_count to 0

@@ -121,6 +121,8 @@ namespace flow {
 			 */
 			DynamicArray<type>& operator=(const DynamicArray<type>& other_arr)
 			{
+				if (this == &other_arr) return *this;
+
 				if (buffer != NULL) delete[] buffer;
 
 				current_element_count = other_arr.current_element_count;
