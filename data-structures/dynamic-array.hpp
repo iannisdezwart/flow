@@ -116,6 +116,22 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Copies the values of another DynamicArray into this
+			 *  DynamicArray. All existing elements are removed.
+			 */
+			void operator=(const DynamicArray<type>& other_arr)
+			{
+				if (buffer != NULL) delete[] buffer;
+
+				current_element_count = other_arr.current_element_count;
+				current_buffer_size = other_arr.current_buffer_size;
+				buffer = allocate_buffer();
+
+				size_t copy_size = sizeof(type) * current_element_count;
+				memcpy(buffer, other_arr.buffer, copy_size);
+			}
+
+			/**
 			 *  @brief  Reassigns the array with new values.
 			 *  @param  new_values  A brace enclosed list containing the new values.
 			 */
