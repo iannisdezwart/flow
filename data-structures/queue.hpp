@@ -141,7 +141,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to the first
 			 *  element of the Queue. Iteration is done in-order.
 			 */
-			ConstIterator cbegin()
+			ConstIterator cbegin() const
 			{
 				return ConstIterator(first);
 			}
@@ -150,7 +150,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to one past
 			 *  the last element of the Queue. Iteration is done in-order.
 			 */
-			ConstIterator cend()
+			ConstIterator cend() const
 			{
 				return ConstIterator(NULL);
 			}
