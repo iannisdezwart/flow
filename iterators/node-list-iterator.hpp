@@ -16,17 +16,7 @@ namespace flow {
 
 			NodeListIterator(const NodeListIterator& other) : node(other.node) {}
 
-			NodeListIterator(NodeListIterator&& other) : node(other.node) {}
-
 			Iterator& operator=(const Iterator& other_iterator)
-			{
-				if (this == &other_iterator) return *this;
-
-				node = other_iterator.node;
-				return *this;
-			}
-
-			Iterator& operator=(Iterator&& other_iterator)
 			{
 				if (this == &other_iterator) return *this;
 

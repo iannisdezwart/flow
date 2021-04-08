@@ -14,19 +14,8 @@ namespace flow {
 
 			BufferIterator(const BufferIterator<type, Const>& other) : ptr(other.ptr) {}
 
-			BufferIterator(BufferIterator<type, Const>&& other) : ptr(other.ptr) {}
-
 			BufferIterator<type, Const>& operator=(
 				const BufferIterator<type, Const>& other
-			) {
-				if (this == &other) return *this;
-
-				ptr = other.ptr;
-				return *this;
-			}
-
-			BufferIterator<type, Const>& operator=(
-				BufferIterator<type, Const>&& other
 			) {
 				if (this == &other) return *this;
 

@@ -21,7 +21,7 @@ namespace flow {
 			{
 				size_t y = 0;
 
-				for (initializer_list<num_t> init_row : init) {
+				for (std::initializer_list<num_t> init_row : init) {
 					size_t x = 0;
 
 					for (num_t num : init_row) {

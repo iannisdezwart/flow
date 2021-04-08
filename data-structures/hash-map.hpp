@@ -29,18 +29,16 @@ namespace flow_hash_map_tools {
 			typedef KeyValuePair<Key, Value> Entry;
 
 			size_t cur_size = 0;
-			DynamicArray<DoublyLinkedList<Entry *>> *table;
+			DynamicArray<DoublyLinkedList<Entry *>> table;
 
-			HashMapTable(size_t table_size)
-				: table(new DynamicArray<DoublyLinkedList<Entry *>>(table_size))
+			HashMapTable(size_t table_size) : table(table_size)
 			{
-				table->unsafe_set_element_count(table->current_capacity());
+				table.unsafe_set_element_count(table.current_capacity());
 			}
 
 			HashMapTable(const HashMapTable<Key, Value>& other)
 			{
 				destroy_entries();
-				delete table;
 
 				cur_size = other.cur_size;
 				table = other.table;
@@ -49,10 +47,11 @@ namespace flow_hash_map_tools {
 			HashMapTable(HashMapTable<Key, Value>&& other)
 			{
 				destroy_entries();
-				delete table;
 
 				cur_size = other.cur_size;
-				table = other.table;
+				table = std::move(other.table);
+
+				other.cur_size = 0;
 			}
 
 			HashMapTable<Key, Value>& operator=(const HashMapTable<Key, Value>& other)
@@ -70,7 +69,9 @@ namespace flow_hash_map_tools {
 				if (this == &other) return *this;
 
 				cur_size = other.cur_size;
-				table = other.table;
+				table = std::move(other.table);
+
+				other.cur_size = 0;
 			}
 
 			void destroy_entries()
@@ -122,22 +123,7 @@ namespace flow_hash_map_tools {
 						: table(other.table), list_index(other.list_index),
 							list_it(other.list_it) {}
 
-					IteratorBase(IteratorBase&& other)
-						: table(other.table), list_index(other.list_index),
-							list_it(other.list_it) {}
-
 					IteratorBase<Const>& operator=(const IteratorBase<Const>& other)
-					{
-						if (this == &other) return *this;
-
-						list_index = other.list_index;
-						list_it = other.list_it;
-						table = other.table;
-
-						return *this;
-					}
-
-					IteratorBase<Const>& operator=(IteratorBase<Const>&& other)
 					{
 						if (this == &other) return *this;
 
@@ -371,7 +357,7 @@ namespace flow {
 			 *  @brief  Creates a HashMap by moving from an rvalue HashMap.
 			 *  @param  other  The HashMap to move.
 			 */
-			HashMap(HashMap<Key, Value>&& other) : table(other.table) {}
+			HashMap(HashMap<Key, Value>&& other) : table(std::move(other.table)) {}
 
 			/**
 			 *  @brief  Destroys the entries stored in this HashMap.
@@ -401,7 +387,7 @@ namespace flow {
 			{
 				if (this == &other) return *this;
 
-				table = other.table;
+				table = std::move(other.table);
 				return *this;
 			}
 

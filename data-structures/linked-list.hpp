@@ -26,7 +26,7 @@ namespace flow_linked_list_tools {
 
 			LinkedListNode(type&& value, LinkedListNode<type, true> *prev = NULL,
 				LinkedListNode<type, true> *next = NULL)
-					: value(value), prev(prev), next(next) {}
+					: value(std::move(value)), prev(prev), next(next) {}
 	};
 
 	/**
@@ -42,7 +42,7 @@ namespace flow_linked_list_tools {
 				: value(value), next(next) {}
 
 			LinkedListNode(type&& value, LinkedListNode<type, false> *next = NULL)
-				: value(value), next(next) {}
+				: value(std::move(value)), next(next) {}
 	};
 
 	enum class LinkedListErrors {
@@ -556,7 +556,7 @@ namespace flow {
 			/* void */ append(type&& value)
 			{
 				LinkedListNode<type, true> *new_node =
-					new LinkedListNode<type, true>(value);
+					new LinkedListNode<type, true>(std::move(value));
 
 				if (this->head == NULL) {
 					this->head = new_node;
@@ -605,7 +605,7 @@ namespace flow {
 			/* void */ append(type&& value)
 			{
 				LinkedListNode<type, false> *new_node =
-					new LinkedListNode<type, false>(value);
+					new LinkedListNode<type, false>(std::move(value));
 
 				if (this->head == NULL) {
 					this->head = new_node;
@@ -704,7 +704,7 @@ namespace flow {
 			/* void */ prepend(type&& value)
 			{
 				LinkedListNode<type, Doubly> *new_node =
-					new LinkedListNode<type, Doubly>(value);
+					new LinkedListNode<type, Doubly>(std::move(value));
 
 				if (this->cur_size == 0) {
 					this->head = new_node;
@@ -728,7 +728,7 @@ namespace flow {
 			/* void */ prepend(const type& value)
 			{
 				LinkedListNode<type, Doubly> *new_node =
-					new LinkedListNode<type, Doubly>(value);
+					new LinkedListNode<type, Doubly>(std::move(value));
 
 				new_node->next = this->head;
 				this->head = new_node;
@@ -798,14 +798,14 @@ namespace flow {
 			typename std::enable_if<T && Doubly, void>::type
 			/* void */ insert(size_t i, type&& value)
 			{
-				if (i == 0) prepend(value);
-				if (i == this->cur_size - 1) append(value);
+				if (i == 0) prepend(std::move(value));
+				if (i == this->cur_size - 1) append(std::move(value));
 
 				LinkedListNode<type, true>& prev_node = get_node(i - 1);
 				LinkedListNode<type, true> *next_node = prev_node.next;
 
 				LinkedListNode<type, true> *new_node =
-					new LinkedListNode<type, true>(value);
+					new LinkedListNode<type, true>(std::move(value));
 
 				prev_node.next = new_node;
 				new_node->next = next_node;
@@ -851,13 +851,13 @@ namespace flow {
 			typename std::enable_if<T && !Doubly, void>::type
 			/* void */ insert(size_t i, type&& value)
 			{
-				if (i == 0) prepend(value);
-				if (i == this->cur_size - 1) append(value);
+				if (i == 0) prepend(std::move(value));
+				if (i == this->cur_size - 1) append(std::move(value));
 
 				LinkedListNode<type, false>& prev_node = get_node(i - 1);
 				LinkedListNode<type, false> *next_node = prev_node.next;
 
-				prev_node.next = new LinkedListNode<type, false>(value);
+				prev_node.next = new LinkedListNode<type, false>(std::move(value));
 				prev_node.next->next = next_node;
 
 				this->cur_size++;
@@ -903,7 +903,7 @@ namespace flow {
 				LinkedListNode<type, true> *next_node = prev_node.next;
 
 				LinkedListNode<type, true> *new_node =
-					new LinkedListNode<type, true>(value);
+					new LinkedListNode<type, true>(std::move(value));
 
 				prev_node.next = new_node;
 				new_node->next = next_node;
@@ -947,7 +947,7 @@ namespace flow {
 				LinkedListNode<type, false>& prev_node = it.get_node();
 				LinkedListNode<type, false> *next_node = prev_node.next;
 
-				prev_node.next = new LinkedListNode<type, false>(value);
+				prev_node.next = new LinkedListNode<type, false>(std::move(value));
 				prev_node.next->next = next_node;
 
 				this->cur_size++;
