@@ -23,6 +23,10 @@ namespace flow_linked_list_tools {
 			LinkedListNode(const type& value, LinkedListNode<type, true> *prev = NULL,
 				LinkedListNode<type, true> *next = NULL)
 					: value(value), prev(prev), next(next) {}
+
+			LinkedListNode(type&& value, LinkedListNode<type, true> *prev = NULL,
+				LinkedListNode<type, true> *next = NULL)
+					: value(value), prev(prev), next(next) {}
 	};
 
 	/**
@@ -35,6 +39,9 @@ namespace flow_linked_list_tools {
 			LinkedListNode<type, false> *next;
 
 			LinkedListNode(const type& value,	LinkedListNode<type, false> *next = NULL)
+				: value(value), next(next) {}
+
+			LinkedListNode(type&& value, LinkedListNode<type, false> *next = NULL)
 				: value(value), next(next) {}
 	};
 
@@ -56,7 +63,7 @@ namespace flow_linked_list_tools {
 
 		public:
 			/**
-			 *  @brief  Creates LinkedList with zero elements.
+			 *  @brief  Creates a LinkedList with zero elements.
 			 */
 			LinkedListBase() : cur_size(0), head(NULL), tail(NULL) {}
 	};
@@ -69,7 +76,7 @@ namespace flow_linked_list_tools {
 
 		public:
 			/**
-			 *  @brief  Creates LinkedList with zero elements.
+			 *  @brief  Creates a LinkedList with zero elements.
 			 */
 			LinkedListBase() : cur_size(0), head(NULL) {}
 	};
@@ -541,12 +548,61 @@ namespace flow {
 			/**
 			 *  @brief  Inserts an element at the end of the LinkedList.
 			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && Doubly, void>::type
+			/* void */ append(type&& value)
+			{
+				LinkedListNode<type, true> *new_node =
+					new LinkedListNode<type, true>(value);
+
+				if (this->head == NULL) {
+					this->head = new_node;
+					this->tail = new_node;
+				} else {
+					this->tail->next = new_node;
+					new_node->prev = this->tail;
+					this->tail = new_node;
+				}
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element at the end of the LinkedList.
+			 *  @param  value  The value to place.
 			 *  @note  Runtime: O(n)
 			 *  @note  Memory: O(1)
 			 */
 			template <bool T = true>
 			typename std::enable_if<T && !Doubly, void>::type
 			/* void */ append(const type& value)
+			{
+				LinkedListNode<type, false> *new_node =
+					new LinkedListNode<type, false>(value);
+
+				if (this->head == NULL) {
+					this->head = new_node;
+				} else {
+					LinkedListNode<type, false> *node = this->head;
+					while (node->next != NULL) node = node->next;
+					node->next = new_node;
+				}
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element at the end of the LinkedList.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(n)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && !Doubly, void>::type
+			/* void */ append(type&& value)
 			{
 				LinkedListNode<type, false> *new_node =
 					new LinkedListNode<type, false>(value);
@@ -644,6 +700,30 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <bool T = true>
+			typename std::enable_if<T && Doubly, void>::type
+			/* void */ prepend(type&& value)
+			{
+				LinkedListNode<type, Doubly> *new_node =
+					new LinkedListNode<type, Doubly>(value);
+
+				if (this->cur_size == 0) {
+					this->head = new_node;
+					this->tail = new_node;
+				} else {
+					new_node->next = this->head;
+					this->head = new_node;
+				}
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element at the beginning of the LinkedList.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
 			typename std::enable_if<T && !Doubly, void>::type
 			/* void */ prepend(const type& value)
 			{
@@ -715,8 +795,61 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <bool T = true>
+			typename std::enable_if<T && Doubly, void>::type
+			/* void */ insert(size_t i, type&& value)
+			{
+				if (i == 0) prepend(value);
+				if (i == this->cur_size - 1) append(value);
+
+				LinkedListNode<type, true>& prev_node = get_node(i - 1);
+				LinkedListNode<type, true> *next_node = prev_node.next;
+
+				LinkedListNode<type, true> *new_node =
+					new LinkedListNode<type, true>(value);
+
+				prev_node.next = new_node;
+				new_node->next = next_node;
+				new_node->prev = &prev_node;
+				next_node->prev = new_node;
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element at a specific index of the LinkedList.
+			 *  The new value is placed between the values already on the LinkedList.
+			 *  @param  i The index at which to place the value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(n)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
 			typename std::enable_if<T && !Doubly, void>::type
 			/* void */ insert(size_t i, const type& value)
+			{
+				if (i == 0) prepend(value);
+				if (i == this->cur_size - 1) append(value);
+
+				LinkedListNode<type, false>& prev_node = get_node(i - 1);
+				LinkedListNode<type, false> *next_node = prev_node.next;
+
+				prev_node.next = new LinkedListNode<type, false>(value);
+				prev_node.next->next = next_node;
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element at a specific index of the LinkedList.
+			 *  The new value is placed between the values already on the LinkedList.
+			 *  @param  i The index at which to place the value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(n)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && !Doubly, void>::type
+			/* void */ insert(size_t i, type&& value)
 			{
 				if (i == 0) prepend(value);
 				if (i == this->cur_size - 1) append(value);
@@ -763,8 +896,53 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <bool T = true>
+			typename std::enable_if<T && Doubly, void>::type
+			/* void */ insert(Iterator& it, type&& value)
+			{
+				LinkedListNode<type, true>& prev_node = it.get_node();
+				LinkedListNode<type, true> *next_node = prev_node.next;
+
+				LinkedListNode<type, true> *new_node =
+					new LinkedListNode<type, true>(value);
+
+				prev_node.next = new_node;
+				new_node->next = next_node;
+				new_node->prev = &prev_node;
+				if (next_node != NULL) next_node->prev = new_node;
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element right after a given iterator.
+			 *  @param  it  The iterator to the value before the new value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
 			typename std::enable_if<T && !Doubly, void>::type
 			/* void */ insert(Iterator& it, const type& value)
+			{
+				LinkedListNode<type, false>& prev_node = it.get_node();
+				LinkedListNode<type, false> *next_node = prev_node.next;
+
+				prev_node.next = new LinkedListNode<type, false>(value);
+				prev_node.next->next = next_node;
+
+				this->cur_size++;
+			}
+
+			/**
+			 *  @brief  Inserts an element right after a given iterator.
+			 *  @param  it  The iterator to the value before the new value.
+			 *  @param  value  The value to place.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			template <bool T = true>
+			typename std::enable_if<T && !Doubly, void>::type
+			/* void */ insert(Iterator& it, type&& value)
 			{
 				LinkedListNode<type, false>& prev_node = it.get_node();
 				LinkedListNode<type, false> *next_node = prev_node.next;
