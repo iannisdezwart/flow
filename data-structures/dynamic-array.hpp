@@ -18,12 +18,13 @@ namespace flow {
 	 */
 	template <typename type>
 	class DynamicArray : public Buffer<type> {
-		private:
+		protected:
 			type *buffer = NULL;
 
 			size_t current_element_count;
 			size_t current_buffer_size;
 
+		private:
 			type *allocate_buffer()
 			{
 				return new type[current_buffer_size];
@@ -77,28 +78,29 @@ namespace flow {
 		public:
 			/**
 			 *  @brief  Creates a dynamic resizable array.
-			 *  @param  starting_size  The number of elements to initially allocate.
+			 *  @param  starting_capacity  The initial number of elements to
+			 *  allocate space for on the DynamicArray.
 			 */
-			DynamicArray(size_t starting_size = 16)
+			DynamicArray(size_t starting_capacity = 16)
 			{
 				current_element_count = 0;
-				current_buffer_size = starting_size;
+				current_buffer_size = starting_capacity;
 				buffer = allocate_buffer();
 			}
 
 			/**
 			 *  @brief  Creates a dynamic resizable array.
 			 *  @param  initial_values  The elements to initially put on the DynamicArray.
-			 *  @param  minimum_starting_size  The minimum number of elements to
-			 * initially allocate. Can be left empty for automatic size assignment.
+			 *  @param  minimum_starting_capacity  The minimum number of elements to
+			 *  initially allocate space for. Can be left empty for automatic size
+			 *  assignment.
 			 */
 			DynamicArray(
 				std::initializer_list<type> initial_values,
-				size_t minimum_starting_size = 0
-			)
-			{
+				size_t minimum_starting_capacity = 0
+			) {
 				current_element_count = 0;
-				reassign(initial_values, minimum_starting_size);
+				reassign(initial_values, minimum_starting_capacity);
 			}
 
 			/**
@@ -116,6 +118,20 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Creates a DynamicArray by moving from an rvalue Array.
+			 *  @param  source_arr  The DynamicArray to move.
+			 */
+			DynamicArray(DynamicArray<type>&& source_arr)
+			{
+				current_element_count = source_arr.current_element_count;
+				current_buffer_size = source_arr.current_buffer_size;
+				buffer = source_arr.buffer;
+
+				source_arr.buffer = NULL;
+				source_arr.current_element_count = 0;
+			}
+
+			/**
 			 *  @brief  Copies the values of another DynamicArray into this
 			 *  DynamicArray. All existing elements are removed.
 			 */
@@ -123,7 +139,7 @@ namespace flow {
 			{
 				if (this == &other_arr) return *this;
 
-				if (buffer != NULL) delete[] buffer;
+				delete[] buffer;
 
 				current_element_count = other_arr.current_element_count;
 				current_buffer_size = other_arr.current_buffer_size;
@@ -131,6 +147,26 @@ namespace flow {
 
 				size_t copy_size = sizeof(type) * current_element_count;
 				memcpy(buffer, other_arr.buffer, copy_size);
+
+				return *this;
+			}
+
+			/**
+			 *  @brief  Moves the values of an rvalue DynamicArray into this
+			 *  DynamicArray. All existing elements are removed.
+			 */
+			DynamicArray<type>& operator=(DynamicArray<type>&& other_arr)
+			{
+				if (this == &other_arr) return *this;
+
+				delete[] buffer;
+
+				current_element_count = other_arr.current_element_count;
+				current_buffer_size = other_arr.current_buffer_size;
+				buffer = other_arr.buffer;
+
+				other_arr.buffer = NULL;
+				other_arr.current_element_count = 0;
 
 				return *this;
 			}

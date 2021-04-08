@@ -12,8 +12,27 @@ namespace flow {
 			typedef NodeListIterator<type, NodeType, Const, Reverse> Iterator;
 
 		public:
-			NodeListIterator(NodeType *node)
-				: node(node) {}
+			NodeListIterator(NodeType *node) : node(node) {}
+
+			NodeListIterator(const NodeListIterator& other) : node(other.node) {}
+
+			NodeListIterator(NodeListIterator&& other) : node(other.node) {}
+
+			Iterator& operator=(const Iterator& other_iterator)
+			{
+				if (this == &other_iterator) return *this;
+
+				node = other_iterator.node;
+				return *this;
+			}
+
+			Iterator& operator=(Iterator&& other_iterator)
+			{
+				if (this == &other_iterator) return *this;
+
+				node = other_iterator.node;
+				return *this;
+			}
 
 			NodeType& get_node()
 			{
@@ -23,14 +42,6 @@ namespace flow {
 			NodeType *get_node_pointer()
 			{
 				return node;
-			}
-
-			Iterator& operator=(const Iterator& other_iterator)
-			{
-				if (this == &other_iterator) return *this;
-
-				node = other_iterator.node;
-				return *this;
 			}
 
 			const type& operator*() const

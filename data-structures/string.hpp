@@ -13,34 +13,54 @@ namespace flow {
 	class String : public DynamicArray<char> {
 		public:
 			/**
-			 *  @brief  Creates a String with a given initial size.
+			 *  @brief  Creates a String with a given initial capacity.
+			 *  @param  capacity  The initial capacity of the String.
 			 */
-			String(size_t size = 16) : DynamicArray<char>(size) {}
+			String(size_t capacity = 16) : DynamicArray<char>(capacity) {}
 
 			/**
 			 *  @brief  Creates a String from a sequence of characters.
+			 *  @param  chars  A reference to the sequence of characters.
 			 */
 			template <size_t char_count>
 			String(const char (&chars)[char_count]) : DynamicArray<char>(char_count - 1)
 			{
-				unsafe_increment_element_count(char_count - 1);
-
-				for (size_t i = 0; i < char_count - 1; i++) {
-					set_at_index(i, chars[i]);
-				}
+				unsafe_set_element_count(char_count - 1);
+				memcpy(buffer, chars, char_count - 1);
 			}
 
 			/**
-			 *  @brief  Creates a String from a char pointer.
+			 *  @brief  Creates a String from a NULL terminated char pointer.
+			 *  @param  chars  A pointer to the NULL terminated char pointer.
 			 */
 			String(const char *chars) : DynamicArray<char>(strlen(chars))
 			{
 				size_t len = strlen(chars);
-				unsafe_increment_element_count(len);
+				unsafe_set_element_count(len);
+				memcpy(buffer, chars, len);
+			}
 
-				for (size_t i = 0; i < len; i++) {
-					set_at_index(i, chars[i]);
-				}
+			/**
+			 *  @brief  Creates a copy of another String.
+			 *  @param  other  The String to copy.
+			 */
+			String(const String& other) : DynamicArray<char>(other.current_capacity())
+			{
+				unsafe_set_element_count(other.size());
+				memcpy(buffer, other.buffer, other.size());
+			}
+
+			/**
+			 *  @brief  Creates a String by moving from an rvalue String.
+			 *  @param  other  The String to move.
+			 */
+			String(String&& other) : DynamicArray<char>(other.current_capacity())
+			{
+				unsafe_set_element_count(other.size());
+				buffer = other.buffer;
+
+				other.buffer = NULL;
+				other.current_element_count = 0;
 			}
 
 			/**
@@ -53,8 +73,8 @@ namespace flow {
 			{
 				size_t new_size = char_count - 1;
 
-				reset(new_size); // Sets current_element_count to 0
-				unsafe_increment_element_count(new_size);
+				reset(new_size);
+				unsafe_set_element_count(new_size);
 
 				for (size_t i = 0; i < new_size; i++) {
 					set_at_index(i, chars[i]);
@@ -66,17 +86,36 @@ namespace flow {
 			/**
 			 *  @brief  Deletes the current value of this String and copies another
 			 *  String to this String.
-			 *  @param  new_value  New String to copy to this String.
+			 *  @param  other  New String to copy to this String.
 			 */
-			String& operator=(const String& new_value)
+			String& operator=(const String& other)
 			{
-				if (this == &new_value) return *this;
+				if (this == &other) return *this;
 
-				size_t new_size = new_value.size();
+				size_t new_size = other.size();
 
-				reset(new_size); // Sets current_element_count to 0
-				unsafe_increment_element_count(new_size);
-				copy_from(new_value);
+				reset(other.current_capacity());
+				unsafe_set_element_count(new_size);
+				copy_from(other);
+
+				return *this;
+			}
+
+			/**
+			 *  @brief  Creates a String by moving from an rvalue String.
+			 *  @param  other  The String to move.
+			 */
+			String& operator=(String&& other)
+			{
+				if (this == &other) return *this;
+
+				delete[] buffer;
+				current_buffer_size = other.current_buffer_size;
+				current_element_count = other.current_element_count;
+				buffer = other.buffer;
+
+				other.buffer = NULL;
+				other.current_element_count = 0;
 
 				return *this;
 			}

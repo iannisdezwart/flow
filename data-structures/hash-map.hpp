@@ -37,6 +37,42 @@ namespace flow_hash_map_tools {
 				table->unsafe_set_element_count(table->current_capacity());
 			}
 
+			HashMapTable(const HashMapTable<Key, Value>& other)
+			{
+				destroy_entries();
+				delete table;
+
+				cur_size = other.cur_size;
+				table = other.table;
+			}
+
+			HashMapTable(HashMapTable<Key, Value>&& other)
+			{
+				destroy_entries();
+				delete table;
+
+				cur_size = other.cur_size;
+				table = other.table;
+			}
+
+			HashMapTable<Key, Value>& operator=(const HashMapTable<Key, Value>& other)
+			{
+				if (this == &other) return *this;
+
+				cur_size = other.cur_size;
+				table = other.table;
+
+				return *this;
+			}
+
+			HashMapTable<Key, Value>& operator=(HashMapTable<Key, Value>&& other)
+			{
+				if (this == &other) return *this;
+
+				cur_size = other.cur_size;
+				table = other.table;
+			}
+
 			void destroy_entries()
 			{
 				for (size_t i = 0; i < table->size(); i++) {
@@ -46,17 +82,6 @@ namespace flow_hash_map_tools {
 						delete entry;
 					}
 				}
-			}
-
-			HashMapTable<Key, Value>& operator=(
-				const HashMapTable<Key, Value>& other_hashmap_table
-			) {
-				if (this == &other_hashmap_table) return *this;
-
-				cur_size = other_hashmap_table.cur_size;
-				table = other_hashmap_table.table;
-
-				return *this;
 			}
 
 			template <bool Const = false>
@@ -93,6 +118,36 @@ namespace flow_hash_map_tools {
 						hook_to_next_node();
 					}
 
+					IteratorBase(const IteratorBase& other)
+						: table(other.table), list_index(other.list_index),
+							list_it(other.list_it) {}
+
+					IteratorBase(IteratorBase&& other)
+						: table(other.table), list_index(other.list_index),
+							list_it(other.list_it) {}
+
+					IteratorBase<Const>& operator=(const IteratorBase<Const>& other)
+					{
+						if (this == &other) return *this;
+
+						list_index = other.list_index;
+						list_it = other.list_it;
+						table = other.table;
+
+						return *this;
+					}
+
+					IteratorBase<Const>& operator=(IteratorBase<Const>&& other)
+					{
+						if (this == &other) return *this;
+
+						list_index = other.list_index;
+						list_it = other.list_it;
+						table = other.table;
+
+						return *this;
+					}
+
 					size_t get_list_index()
 					{
 						return list_index;
@@ -101,16 +156,6 @@ namespace flow_hash_map_tools {
 					typename DoublyLinkedList<Entry *>::Iterator& get_list_it()
 					{
 						return list_it;
-					}
-
-					IteratorBase<Const>& operator=(const IteratorBase<Const>& other_iterator)
-					{
-						if (this == &other_iterator) return *this;
-
-						list_index = other_iterator.list_index;
-						list_it = other_iterator.list_it;
-
-						return *this;
 					}
 
 					const Entry& operator*() const
@@ -317,6 +362,18 @@ namespace flow {
 			HashMap(size_t init_table_size = 16) : table(init_table_size) {}
 
 			/**
+			 *  @brief  Creates a copy of another HashMap.
+			 *  @param  other  The HashMap to copy.
+			 */
+			HashMap(const HashMap<Key, Value>& other) : table(other.table) {}
+
+			/**
+			 *  @brief  Creates a HashMap by moving from an rvalue HashMap.
+			 *  @param  other  The HashMap to move.
+			 */
+			HashMap(HashMap<Key, Value>&& other) : table(other.table) {}
+
+			/**
 			 *  @brief  Destroys the entries stored in this HashMap.
 			 */
 			~HashMap()
@@ -328,11 +385,23 @@ namespace flow {
 			 *  @brief  Copies the entries of another HashMap into this HashMap.
 			 *  All existing entries are removed.
 			 */
-			HashMap<Key, Value>& operator=(const HashMap<Key, Value>& other_hashmap)
+			HashMap<Key, Value>& operator=(const HashMap<Key, Value>& other)
 			{
-				if (this == &other_hashmap) return *this;
+				if (this == &other) return *this;
 
-				table = other_hashmap.table;
+				table = other.table;
+				return *this;
+			}
+
+			/**
+			 *  @brief  Moves the entries of another HashMap into this HashMap.
+			 *  All existing entries are removed.
+			 */
+			HashMap<Key, Value>& operator=(HashMap<Key, Value>&& other)
+			{
+				if (this == &other) return *this;
+
+				table = other.table;
 				return *this;
 			}
 
