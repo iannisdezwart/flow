@@ -126,7 +126,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to the first
 			 *  element of the Buffer. Iteration is done in-order.
 			 */
-			ConstIterator cbegin()
+			ConstIterator cbegin() const
 			{
 				return ConstIterator(data());
 			}
@@ -135,7 +135,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to one past
 			 *  the last element of the Buffer. Iteration is done in-order.
 			 */
-			ConstIterator cend()
+			ConstIterator cend() const
 			{
 				return ConstIterator(data() + size());
 			}
@@ -144,7 +144,7 @@ namespace flow {
 			 *  @brief  Returns a reverse read-only iterator that points to the
 			 *  last element of the Buffer. Iteration is done in-order.
 			 */
-			ConstIterator crbegin()
+			ConstIterator crbegin() const
 			{
 				return ConstIterator(data() + size() - 1);
 			}
@@ -154,7 +154,7 @@ namespace flow {
 			 *  before the first element of the Buffer.
 			 *  Iteration is done in-order.
 			 */
-			ConstIterator crend()
+			ConstIterator crend() const
 			{
 				return ConstIterator(data() - 1);
 			}
