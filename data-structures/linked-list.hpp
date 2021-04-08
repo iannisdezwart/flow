@@ -237,7 +237,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to the first
 			 *  element of the LinkedList. Iteration is done in-order.
 			 */
-			ConstIterator cbegin()
+			ConstIterator cbegin() const
 			{
 				return ConstIterator(this->head);
 			}
@@ -246,7 +246,7 @@ namespace flow {
 			 *  @brief  Returns a read-only iterator that points to one past
 			 *  the last element of the LinkedList. Iteration is done in-order.
 			 */
-			ConstIterator cend()
+			ConstIterator cend() const
 			{
 				return ConstIterator(NULL);
 			}
@@ -257,7 +257,7 @@ namespace flow {
 			 */
 			template <bool T = true>
 			typename std::enable_if<T && Doubly, ConstIterator>::type
-			/* ConstIterator */ crbegin()
+			/* ConstIterator */ crbegin() const
 			{
 				return ConstIterator(this->tail);
 			}
@@ -269,7 +269,7 @@ namespace flow {
 			 */
 			template <bool T = true>
 			typename std::enable_if<T && Doubly, ConstIterator>::type
-			/* ConstIterator */ crend()
+			/* ConstIterator */ crend() const
 			{
 				return ConstIterator(NULL);
 			}
