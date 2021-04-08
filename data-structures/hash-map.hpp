@@ -48,10 +48,13 @@ namespace flow_hash_map_tools {
 				}
 			}
 
-			void operator=(const HashMapTable<Key, Value>& other_hashmap_table)
-			{
+			HashMapTable<Key, Value>& operator=(
+				const HashMapTable<Key, Value>& other_hashmap_table
+			) {
 				cur_size = other_hashmap_table.cur_size;
 				table = other_hashmap_table.table;
+
+				return *this;
 			}
 
 			template <bool Const = false>
@@ -98,10 +101,12 @@ namespace flow_hash_map_tools {
 						return list_it;
 					}
 
-					void operator=(const IteratorBase& other_iterator)
+					IteratorBase<Const>& operator=(const IteratorBase<Const>& other_iterator)
 					{
 						list_index = other_iterator.list_index;
 						list_it = other_iterator.list_it;
+
+						return *this;
 					}
 
 					const Entry& operator*() const
@@ -116,7 +121,7 @@ namespace flow_hash_map_tools {
 						return **list_it;
 					}
 
-					IteratorBase& /* prefix */ operator++()
+					IteratorBase<Const>& /* prefix */ operator++()
 					{
 						list_it++;
 
@@ -128,9 +133,9 @@ namespace flow_hash_map_tools {
 						return *this;
 					}
 
-					IteratorBase /* postfix */ operator++(int)
+					IteratorBase<Const> /* postfix */ operator++(int)
 					{
-						IteratorBase old_it = *this;
+						IteratorBase<Const> old_it = *this;
 						list_it++;
 
 						if (list_it.get_node_pointer() == NULL) {
@@ -141,12 +146,12 @@ namespace flow_hash_map_tools {
 						return old_it;
 					}
 
-					bool operator==(const IteratorBase& other)
+					bool operator==(const IteratorBase<Const>& other)
 					{
 						return list_index == other.list_index && list_it == other.list_it;
 					}
 
-					bool operator!=(const IteratorBase& other)
+					bool operator!=(const IteratorBase<Const>& other)
 					{
 						return list_index != other.list_index || list_it != other.list_it;
 					}
@@ -319,9 +324,10 @@ namespace flow {
 			 *  @brief  Copies the values of another HashMap into this HashMap.
 			 *  All existing elements are removed.
 			 */
-			void operator=(const HashMap<Key, Value>& other_hashmap)
+			HashMap<Key, Value>& operator=(const HashMap<Key, Value>& other_hashmap)
 			{
 				table = other_hashmap.table;
+				return *this;
 			}
 
 			/**

@@ -12,9 +12,12 @@ namespace flow {
 		public:
 			BufferIterator(type *ptr) : ptr(ptr) {}
 
-			void operator=(const BufferIterator<type, Const>& other_iterator)
-			{
+			BufferIterator<type, Const>& operator=(
+				const BufferIterator<type, Const>& other_iterator
+			) {
 				ptr = other_iterator.ptr;
+
+				return *this;
 			}
 
 			const type& operator*() const

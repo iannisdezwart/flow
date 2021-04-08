@@ -25,9 +25,10 @@ namespace flow {
 				return node;
 			}
 
-			void operator=(const Iterator& other_iterator)
+			Iterator& operator=(const Iterator& other_iterator)
 			{
 				node = other_iterator.node;
+				return *this;
 			}
 
 			const type& operator*() const

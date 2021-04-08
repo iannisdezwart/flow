@@ -49,7 +49,7 @@ namespace flow {
 			 *  @param  new_value  New character array to copy to this String.
 			 */
 			template <size_t char_count>
-			void operator=(const char (&chars)[char_count])
+			String& operator=(const char (&chars)[char_count])
 			{
 				size_t new_size = char_count - 1;
 
@@ -59,6 +59,8 @@ namespace flow {
 				for (size_t i = 0; i < new_size; i++) {
 					set_at_index(i, chars[i]);
 				}
+
+				return *this;
 			}
 
 			/**
@@ -66,13 +68,15 @@ namespace flow {
 			 *  String to this String.
 			 *  @param  new_value  New String to copy to this String.
 			 */
-			void operator=(const String& new_value)
+			String& operator=(const String& new_value)
 			{
 				size_t new_size = new_value.size();
 
 				reset(new_size); // Sets current_element_count to 0
 				unsafe_increment_element_count(new_size);
 				copy_from(new_value);
+
+				return *this;
 			}
 
 			/**
