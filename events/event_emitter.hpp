@@ -10,10 +10,49 @@ namespace flow {
 	typedef size_t event_id_t;
 
 	template <typename... Args>
-	struct EventListener {
-		std::function<void(Args...)> callback;
-		event_id_t id;
-		bool recurrent;
+	class EventListener {
+		private:
+			typedef std::function<void(Args...)> callback_t;
+
+		public:
+			std::function<void(Args...)> callback;
+			event_id_t id;
+			bool recurrent;
+
+			EventListener() {}
+
+			EventListener(callback_t&& callback, event_id_t id,	bool recurrent)
+				: callback(std::move(callback)), id(id), recurrent(recurrent) {}
+
+			EventListener(const EventListener<Args...>& other)
+				: callback(callback), id(id), recurrent(recurrent) {}
+
+			EventListener(EventListener<Args...>&& other)
+				: callback(std::move(callback)), id(id), recurrent(recurrent) {}
+
+			EventListener<Args...>& operator=(const EventListener<Args...>& other)
+			{
+				if (this == &other) return *this;
+
+				callback = other.callback;
+				id = other.id;
+				recurrent = other.recurrent;
+
+				return *this;
+			}
+
+			EventListener<Args...>& operator=(EventListener<Args...>&& other)
+			{
+				if (this == &other) return *this;
+
+				callback = std::move(other.callback);
+				id = other.id;
+				recurrent = other.recurrent;
+
+				other.callback = NULL;
+
+				return *this;
+			}
 	};
 
 	/**
@@ -22,6 +61,7 @@ namespace flow {
 	template <typename... Args>
 	class EventEmitter {
 		private:
+			typedef std::function<void(Args...)> callback_t;
 			DynamicArray<EventListener<Args...>> listeners;
 			event_id_t current_id = 0;
 
@@ -34,14 +74,10 @@ namespace flow {
 			 *  @returns  The id of this listener. You will need to pass this to
 			 *  EventEmitter::remove_listener() if you wish to delete the listener.
 			 */
-			event_id_t add_listener(std::function<void(Args...)> callback,
-				bool recurrent = true)
+			event_id_t add_listener(callback_t&& callback, bool recurrent = true)
 			{
 				event_id_t id = current_id++;
-
-				EventListener<Args...> listener = { callback, id, recurrent };
-				listeners.append(listener);
-
+				listeners.append(EventListener<Args...>(std::move(callback), id, recurrent));
 				return id;
 			}
 

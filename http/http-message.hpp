@@ -590,15 +590,9 @@ namespace flow {
 					// Stop when the content is fully sent
 
 					if (content_provider->finished) {
-						printf("\x1b[41mcontent provider finished, deleting it\x1b[0m\n");
 						socket.io_event.remove_listener(*io_event_listener_id);
-						printf("\x1b[41mremoved listener\x1b[0m\n");
-						printf("\x1b[41mdeleting io_event_listener_id @ %lx\x1b[0m\n", (size_t) io_event_listener_id);
-						// delete io_event_listener_id;
-						// printf("\x1b[41mdeleted listener_id\x1b[0m\n");
-						// printf("\x1b[41mdeleting content_provider @ %lx\x1b[0m\n", (size_t) content_provider);
-						// delete content_provider;
-						// printf("\x1b[41mdeleted content_provider\x1b[0m\n");
+						delete io_event_listener_id;
+						delete content_provider;
 					}
 				});
 

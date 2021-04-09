@@ -13,7 +13,35 @@ namespace flow_queue_tools {
 			QueueNode *next;
 			type value;
 
-			QueueNode(type value, QueueNode *next = NULL) : value(value), next(next) {}
+			QueueNode() {}
+
+			QueueNode(const type& value, QueueNode<type> *next = NULL)
+				: value(value), next(next) {}
+
+			QueueNode(type&& value, QueueNode<type> *next = NULL)
+				: value(std::move(value)), next(next) {}
+
+			QueueNode<type>& operator=(const QueueNode<type>& other)
+			{
+				if (this == &other) return *this;
+
+				value = other.value;
+				next = other.next;
+
+				return *this;
+			}
+
+			QueueNode<type>& operator=(QueueNode<type>&& other)
+			{
+				if (this == &other) return *this;
+
+				value = std::move(other.value);
+				next = other.next;
+
+				other.value = NULL;
+
+				return *this;
+			}
 	};
 };
 
@@ -288,12 +316,41 @@ namespace flow {
 			}
 
 			/**
+			 *  @brief  Places a value at the end of the Queue.
+			 *  @param  value  A reference to the value to push.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			void push(type&& value)
+			{
+				QueueNode<type> *new_node = new QueueNode<type>(std::move(value));
+
+				if (current_element_count == 0) {
+					first = new_node;
+					last = new_node;
+				} else {
+					last->next = new_node;
+					last = new_node;
+				}
+
+				current_element_count++;
+			}
+
+			/**
 			 *  @brief  Places a value to the end of the Queue.
 			 *  @param  value  A reference to the value to push.
 			 *  @note  Runtime: O(1)
 			 *  @note  Memory: O(1)
 			 */
 			void operator+=(const type& value) { push(value); }
+
+			/**
+			 *  @brief  Places a value to the end of the Queue.
+			 *  @param  value  A reference to the value to push.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			void operator+=(type&& value) { push(std::move(value)); }
 
 			/**
 			 *  @brief  Places a value before at the start of the Queue.
@@ -304,6 +361,27 @@ namespace flow {
 			void prepend(const type& value)
 			{
 				QueueNode<type> *new_node = new QueueNode<type>(value);
+
+				if (current_element_count == 0) {
+					first = new_node;
+					last = new_node;
+				} else {
+					new_node->next = first;
+					first = new_node;
+				}
+
+				current_element_count++;
+			}
+
+			/**
+			 *  @brief  Places a value before at the start of the Queue.
+			 *  @param  value  A reference to the value to add to the Queue.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			void prepend(type&& value)
+			{
+				QueueNode<type> *new_node = new QueueNode<type>(std::move(value));
 
 				if (current_element_count == 0) {
 					first = new_node;

@@ -18,6 +18,9 @@ namespace flow {
 	 */
 	template <typename type>
 	class DynamicArray : public Buffer<type> {
+		public:
+			static constexpr const size_t MIN_CAPACITY = 16;
+
 		protected:
 			type *buffer = NULL;
 
@@ -294,7 +297,7 @@ namespace flow {
 			 *  @param  index  i
 			 *  @param  value  The value to assign at the index.
 			 */
-			void set_at_index(size_t index, type value)
+			void set_at_index(size_t index, const type& value)
 			{
 				#ifdef DYNAMIC_ARRAY_SAFE_BOUNDS
 				if (index >= current_element_count) {
@@ -394,7 +397,8 @@ namespace flow {
 			void unreserve(size_t size)
 			{
 				size_t new_size = current_element_count - size;
-				if (new_size * 2 <= current_buffer_size) shrink();
+				if (new_size * 2 <= current_buffer_size
+					&& current_buffer_size > DynamicArray::MIN_CAPACITY) shrink();
 			}
 
 			/**
@@ -459,7 +463,7 @@ namespace flow {
 			 *  @param  offset  The offset after the current last element to place
 			 *  the new value.
 			 */
-			void unsafe_append(type value, size_t offset = 0)
+			void unsafe_append(const type& value, size_t offset = 0)
 			{
 				buffer[current_element_count + offset] = value;
 			}
@@ -469,7 +473,7 @@ namespace flow {
 			 *  The DynamicArray will automatically grow by a factor of 2 if needed.
 			 *  @param  value  The value to push to the DynamicArray.
 			 */
-			void append(type value)
+			void append(const type& value)
 			{
 				// Grow array if needed
 
@@ -482,9 +486,32 @@ namespace flow {
 			 *  The DynamicArray will automatically grow by a factor of 2 if needed.
 			 *  @param  value  The value to push to the DynamicArray.
 			 */
-			void operator+=(type value)
+			void append(type&& value)
+			{
+				// Grow array if needed
+
+				if (current_element_count >= current_buffer_size) grow();
+				buffer[current_element_count++] = std::move(value);
+			}
+
+			/**
+			 *  @brief  Appends a new element to the back of the DynamicArray.
+			 *  The DynamicArray will automatically grow by a factor of 2 if needed.
+			 *  @param  value  The value to push to the DynamicArray.
+			 */
+			void operator+=(const type& value)
 			{
 				append(value);
+			}
+
+			/**
+			 *  @brief  Appends a new element to the back of the DynamicArray.
+			 *  The DynamicArray will automatically grow by a factor of 2 if needed.
+			 *  @param  value  The value to push to the DynamicArray.
+			 */
+			void operator+=(type&& value)
+			{
+				append(std::move(value));
 			}
 
 			/**
@@ -499,7 +526,8 @@ namespace flow {
 
 				// Shrink array if possible
 
-				if (current_element_count <= current_buffer_size / 2) shrink();
+				if (current_element_count <= current_buffer_size / 2
+					&& current_buffer_size > DynamicArray::MIN_CAPACITY) shrink();
 				return value;
 			}
 
@@ -511,7 +539,7 @@ namespace flow {
 			 *  @note  Runtime: O(n), n = size()
 			 *  @note  Memory: O(1)
 			 */
-			void prepend(type value)
+			void prepend(const type& value)
 			{
 				// Grow array if needed
 
@@ -529,6 +557,34 @@ namespace flow {
 				}
 
 				buffer[0] = value;
+			}
+
+			/**
+			 *  @brief  Places a new element to the the beginning of the DynamicArray.
+			 *  The other elements will be shifted one place to the right.
+			 *  The DynamicArray will automatically grow by a factor of 2 if needed.
+			 *  @param  value  The value to place in front of the DynamicArray.
+			 *  @note  Runtime: O(n), n = size()
+			 *  @note  Memory: O(1)
+			 */
+			void prepend(type&& value)
+			{
+				// Grow array if needed
+
+				if (current_element_count >= current_buffer_size) grow();
+				current_element_count++;
+
+				// Shift elements one spot to the right
+
+				size_t i = current_element_count;
+
+				while (true) {
+					buffer[i + 1] = buffer[i];
+					if (i == 0) break;
+					i--;
+				}
+
+				buffer[0] = std::move(value);
 			}
 
 			/**
@@ -550,7 +606,8 @@ namespace flow {
 
 				// Shrink array if possible
 
-				if (current_element_count <= current_buffer_size / 2) shrink();
+				if (current_element_count <= current_buffer_size / 2
+					&& current_buffer_size > DynamicArray::MIN_CAPACITY) shrink();
 				return value;
 			}
 

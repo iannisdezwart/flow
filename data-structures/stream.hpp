@@ -48,7 +48,7 @@ namespace flow {
 			 *  @brief  Writes one instance of data to the Stream.
 			 *  @param  data  The data to write to the Stream.
 			 */
-			void write(type data)
+			void write(const type& data)
 			{
 				if (!active) return;
 
@@ -94,9 +94,9 @@ namespace flow {
 			 *  @param  callback  This function will be executed when the Stream
 			 *  receives new data.
 			 */
-			void on_data(std::function<void(type)> callback)
+			void on_data(std::function<void(type)>&& callback)
 			{
-				write_event.add_listener(callback);
+				write_event.add_listener(std::move(callback));
 			}
 	};
 };

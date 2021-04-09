@@ -552,6 +552,7 @@ namespace flow {
 			 *  @note  Memory: O(1)
 			 */
 			template <bool T = true>
+			inline
 			typename std::enable_if<T && Doubly, void>::type
 			/* void */ append(type&& value)
 			{

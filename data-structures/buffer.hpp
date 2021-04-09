@@ -69,7 +69,7 @@ namespace flow {
 			 *  @param  index  i
 			 *  @param  value  The value to assign at the index.
 			 */
-			virtual void set_at_index(size_t index, type value) = 0;
+			virtual void set_at_index(size_t index, const type& value) = 0;
 
 			// Iterators
 
