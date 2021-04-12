@@ -32,7 +32,7 @@ namespace flow {
 			 }
 
 			/**
-			 *  @brief  Transfers ownership of a Pointer.
+			 *  @brief  Transfers ownership of another Pointer to this Pointer.
 			 */
 			Pointer(Pointer&& other) : ptr(other.ptr)
 			{
@@ -45,7 +45,7 @@ namespace flow {
 			Pointer(const Pointer&) = delete;
 
 			/**
-			 *  @brief  Transfers ownership of a Pointer.
+			 *  @brief  Transfers ownership of another Pointer to this Pointer.
 			 */
 			Pointer& operator=(Pointer&& other)
 			{
