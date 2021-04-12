@@ -17,7 +17,12 @@ namespace flow_hash_map_tools {
 			Value value;
 
 			KeyValuePair() {}
-			KeyValuePair(const Key& key, const Value& value) : key(key), value(value) {}
+
+			KeyValuePair(const Key& key, const Value& value)
+				: key(key), value(value) {}
+
+			KeyValuePair(Key&& key, Value&& value)
+				: key(std::move(key)), value(std::move(value)) {}
 	};
 
 	enum class HashMapErrors {
@@ -242,6 +247,22 @@ namespace flow_hash_map_tools {
 				return false;
 			}
 
+			bool insert(Key&& key, Value&& value)
+			{
+				LinkedList<Entry>& list = get_list_of_key(key);
+
+				for (Entry& entry : list) {
+					if (entry.key == key) {
+						entry.value = value;
+						return false;
+					}
+				}
+
+				cur_size++;
+				list.append(Entry(std::move(key), std::move(value)));
+				return false;
+			}
+
 			bool remove(const Key& key)
 			{
 				LinkedList<Entry>& list = get_list_of_key(key);
@@ -310,7 +331,7 @@ namespace flow {
 				HashMapTable<Key, Value> new_table(table.table.size() << 1);
 
 				for (const Entry& entry : table) {
-					new_table.insert(entry.key, entry.value);
+					new_table.insert(std::move(entry.key), std::move(entry.value));
 				}
 
 				table = std::move(new_table);
@@ -321,7 +342,7 @@ namespace flow {
 				HashMapTable<Key, Value> new_table(table.table.size() >> 1);
 
 				for (const Entry& entry : table) {
-					new_table.insert(entry.key, entry.value);
+					new_table.insert(std::move(entry.key), std::move(entry.value));
 				}
 
 				table = std::move(new_table);
@@ -475,6 +496,21 @@ namespace flow {
 				if (avg_list_size() >= HashMap::MAX_ALPHA) grow();
 
 				return table.insert(key, value);
+			}
+
+			/**
+			 *  @brief  Inserts an entry into the HashMap. If the key exists,
+			 *  the value is overwritten.
+			 *  @returns  False if the key already existed and the corresponding
+			 *  value was updated, true if a new entry was created.
+			 *  @note  Runtime: O(1)
+			 *  @note  Memory: O(1)
+			 */
+			bool insert(Key&& key, Value&& value)
+			{
+				if (avg_list_size() >= HashMap::MAX_ALPHA) grow();
+
+				return table.insert(std::move(key), std::move(value));
 			}
 
 			/**
