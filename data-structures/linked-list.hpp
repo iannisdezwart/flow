@@ -665,15 +665,16 @@ namespace flow {
 				if (cur_size == 0)
 					throw LinkedListErrors::EXTRACT_FROM_EMPTY_LIST;
 
-				Node<type>& prev_node = it.get_node();
-				Node<type> *next_node = prev_node.next->next;
-				type value = next_node->prev->value;
+				Node<type>& node_to_remove = it.get_node();
+				Node<type> *prev_node = node_to_remove.prev;
+				Node<type> *next_node = node_to_remove.next;
+				type value = node_to_remove.value;
 
-				delete next_node->prev;
+				delete &node_to_remove;
 				cur_size--;
 
-				next_node->prev = &prev_node;
-				prev_node.next = next_node;
+				next_node->prev = prev_node;
+				prev_node->next = next_node;
 
 				return value;
 			}
