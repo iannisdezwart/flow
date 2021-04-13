@@ -89,7 +89,7 @@ namespace flow {
 			/**
 			 *  @brief  Returns the raw pointer of this owned Pointer.
 			 */
-			type *operator->() const
+			type *operator->()
 			{
 				return ptr;
 			}
